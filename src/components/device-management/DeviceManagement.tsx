@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   Table, 
@@ -9,13 +9,11 @@ import {
   Input, 
   Select, 
   DatePicker, 
-  Switch,
   Popconfirm, 
   message, 
   Row, 
   Col, 
   Statistic, 
-  Badge, 
   Divider, 
   Tooltip,
   Tag,
@@ -33,20 +31,16 @@ import {
   SyncOutlined, 
   ToolOutlined, 
   SettingOutlined,
-  SearchOutlined,
   CheckCircleOutlined,
   WarningOutlined,
   StopOutlined,
   EnvironmentOutlined,
-  ClockCircleOutlined,
-  InfoCircleOutlined,
-  SwapOutlined,
   HistoryOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { ManholeInfo, ManholeStatus, ManholeRealTimeData, MaintenanceRecord } from '../../typings';
+import { ManholeInfo, ManholeStatus, ManholeRealTimeData } from '../../typings';
 import { formatDateTime, generateUniqueId } from '../../utils';
-import { generateMockManholes, generateMockRealTimeData } from '../../mock-data/manholes';
+import { fetchManholes, fetchRealtimeByManhole } from '../../services/api';
 
 // 获取设备状态对应的颜色
 const getDeviceStatusColor = (status: ManholeStatus): string => {
@@ -82,7 +76,7 @@ const DeviceManagement: React.FC = () => {
   // 状态定义
   const [devices, setDevices] = useState<ManholeInfo[]>([]);
   const [realTimeDataMap, setRealTimeDataMap] = useState<Map<string, ManholeRealTimeData>>(new Map());
-  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('添加设备');
@@ -95,47 +89,56 @@ const DeviceManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<ManholeStatus | null>(null);
   const [searchText, setSearchText] = useState('');
   
-  // 加载模拟数据
+  // 加载API数据
   useEffect(() => {
     setLoading(true);
-    
-    // 模拟API请求延迟
-    setTimeout(() => {
-      const mockDevices = generateMockManholes(50);
-      setDevices(mockDevices);
-      
-      // 创建实时数据Map
-      const dataMap = new Map<string, ManholeRealTimeData>();
-      mockDevices.forEach(device => {
-        const realTimeData = generateMockRealTimeData(device.id, device.status);
-        dataMap.set(device.id, realTimeData);
-      });
-      setRealTimeDataMap(dataMap);
-      
-      setLoading(false);
-    }, 800);
+
+    const loadDevices = async () => {
+      try {
+        const devicesData = await fetchManholes();
+        setDevices(devicesData);
+
+        const dataMap = new Map<string, ManholeRealTimeData>();
+        const realtimeResults = await Promise.all(
+          devicesData.map(device => fetchRealtimeByManhole(device.id).catch(() => null))
+        );
+        devicesData.forEach((device, idx) => {
+          const data = realtimeResults[idx];
+          if (data) dataMap.set(device.id, data);
+        });
+        setRealTimeDataMap(dataMap);
+      } catch (error) {
+        console.error('加载设备数据失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDevices();
   }, []);
   
-  // 定期更新实时数据
+  // 定期从API更新实时数据
   useEffect(() => {
     if (devices.length === 0) return;
     
     const intervalId = setInterval(() => {
-      const newDataMap = new Map(realTimeDataMap);
-      
-      devices.forEach(device => {
-        // 仅为在线设备更新数据
-        if (device.status !== ManholeStatus.Offline) {
-          const realTimeData = generateMockRealTimeData(device.id, device.status);
-          newDataMap.set(device.id, realTimeData);
-        }
+      Promise.all(
+        devices.map(device => fetchRealtimeByManhole(device.id).catch(() => null))
+      ).then(results => {
+        setRealTimeDataMap(prev => {
+          const newMap = new Map(prev);
+          devices.forEach((device, idx) => {
+            if (results[idx]) newMap.set(device.id, results[idx]!);
+          });
+          return newMap;
+        });
+      }).catch(error => {
+        console.error('更新实时数据失败:', error);
       });
-      
-      setRealTimeDataMap(newDataMap);
-    }, 30000); // 每30秒更新一次
+    }, 30000);
     
     return () => clearInterval(intervalId);
-  }, [devices, realTimeDataMap]);
+  }, [devices]);
   
   // 过滤设备列表
   const filteredDevices = devices.filter(device => {
@@ -225,10 +228,14 @@ const DeviceManagement: React.FC = () => {
         setDevices([...devices, newDevice]);
         message.success('设备已添加');
         
-        // 为新设备创建实时数据
-        const newDataMap = new Map(realTimeDataMap);
-        newDataMap.set(newDevice.id, generateMockRealTimeData(newDevice.id));
-        setRealTimeDataMap(newDataMap);
+        // 为新设备获取实时数据
+        fetchRealtimeByManhole(newDevice.id).then(realTimeData => {
+          setRealTimeDataMap(prev => {
+            const newMap = new Map(prev);
+            newMap.set(newDevice.id, realTimeData);
+            return newMap;
+          });
+        }).catch(() => {});
       }
       
       setIsModalVisible(false);
@@ -411,10 +418,6 @@ const DeviceManagement: React.FC = () => {
       width: 120,
       render: (_: any, record: ManholeInfo) => {
         const batteryLevel = realTimeDataMap.get(record.id)?.batteryLevel || 0;
-        let color = 'success';
-        if (batteryLevel < 20) color = 'error';
-        else if (batteryLevel < 50) color = 'warning';
-        
         return (
           <div>
             <Progress 
@@ -434,10 +437,6 @@ const DeviceManagement: React.FC = () => {
       render: (_: any, record: ManholeInfo) => {
         const signal = realTimeDataMap.get(record.id)?.signalStrength || -100;
         const signalPercent = Math.max(0, Math.min(100, (signal + 100) * 1.25));
-        
-        let color = 'success';
-        if (signalPercent < 20) color = 'error';
-        else if (signalPercent < 50) color = 'warning';
         
         return (
           <div>

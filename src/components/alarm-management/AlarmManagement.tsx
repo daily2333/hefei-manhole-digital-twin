@@ -11,11 +11,11 @@ import {
 } from '@ant-design/icons';
 import { ManholeAlarm, AlarmLevel, AlarmType } from '../../typings';
 import AlarmList from './AlarmList';
-import { generateMockAlarms } from '../../mock-data/manholes';
+import { fetchAlarms } from '../../services/api';
 import { formatDateTime } from '../../utils';
 import ReactECharts from 'echarts-for-react';
 
-const { TabPane } = Tabs;
+
 
 /**
  * 告警管理主页面组件
@@ -28,21 +28,14 @@ const AlarmManagement: React.FC = () => {
   // 加载状态
   const [loading, setLoading] = useState(false);
   
-  // 获取模拟数据
   const fetchAlarmData = useCallback(async () => {
     setLoading(true);
     try {
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // 获取模拟数据 - 基于已有的generateMockAlarms函数
-      // 这里我们只传递一个空数组，让函数内部自行生成模拟井盖数据
-      const mockAlarms = generateMockAlarms([]);
-      
-      // 按时间排序，最新的在前面
-      mockAlarms.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-      
-      setAlarms(mockAlarms);
+      const alarmsData = await fetchAlarms();
+
+      alarmsData.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+      setAlarms(alarmsData);
     } catch (error) {
       console.error('获取告警数据失败:', error);
     } finally {
@@ -75,14 +68,16 @@ const AlarmManagement: React.FC = () => {
           }
         }
         
-        // 有10%的概率添加1-2条新告警
-        if (Math.random() < 0.1) {
-          const newAlarms = generateMockAlarms([]).slice(0, 2);
-          return [...newAlarms, ...updatedAlarms];
-        }
-        
         return updatedAlarms;
       });
+      
+      // 有10%的概率从API刷新告警数据
+      if (Math.random() < 0.1) {
+        fetchAlarms().then(newAlarms => {
+          newAlarms.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+          setAlarms(newAlarms);
+        }).catch(() => {});
+      }
     }, 300000); // 5分钟更新一次
     
     return () => clearInterval(intervalId);
@@ -408,51 +403,31 @@ const AlarmManagement: React.FC = () => {
       
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col span={24}>
-          <Tabs activeKey={activeTab} onChange={setActiveTab} className="glass-card alarm-tabs">
-            <TabPane 
-              tab={
-                <span>
-                  <BellOutlined />
-                  当前告警
-                  <Badge count={alarmStatistics.unresolved} style={{ marginLeft: 8 }} />
-                </span>
-              } 
-              key="1"
-            >
-              <AlarmList 
-                alarms={alarms.filter(a => !a.isResolved)} 
-                onAcknowledge={handleAcknowledge}
-                onResolve={handleResolve}
-              />
-            </TabPane>
-            <TabPane 
-              tab={
-                <span>
-                  <HistoryOutlined />
-                  历史告警
-                </span>
-              } 
-              key="2"
-            >
-              <AlarmList 
-                alarms={alarms.filter(a => a.isResolved)} 
-              />
-            </TabPane>
-            <TabPane 
-              tab={
-                <span>
-                  <SettingOutlined />
-                  告警配置
-                </span>
-              } 
-              key="3"
-            >
-              <Card title="告警规则配置" className="glass-card">
-                <p>此模块正在开发中，敬请期待...</p>
-                <p>您将可以在此配置不同类型告警的阈值、通知方式等设置。</p>
-              </Card>
-            </TabPane>
-          </Tabs>
+          <Tabs 
+            activeKey={activeTab} 
+            onChange={setActiveTab} 
+            className="glass-card alarm-tabs"
+            items={[
+              {
+                label: <span><BellOutlined />当前告警<Badge count={alarmStatistics.unresolved} style={{ marginLeft: 8 }} /></span>,
+                key: '1',
+                children: <AlarmList alarms={alarms.filter(a => !a.isResolved)} onAcknowledge={handleAcknowledge} onResolve={handleResolve} />
+              },
+              {
+                label: <span><HistoryOutlined />历史告警</span>,
+                key: '2',
+                children: <AlarmList alarms={alarms.filter(a => a.isResolved)} />
+              },
+              {
+                label: <span><SettingOutlined />告警配置</span>,
+                key: '3',
+                children: <Card title="告警规则配置" className="glass-card">
+                  <p>此模块正在开发中，敬请期待...</p>
+                  <p>您将可以在此配置不同类型告警的阈值、通知方式等设置。</p>
+                </Card>
+              },
+            ]}
+          />
         </Col>
       </Row>
       

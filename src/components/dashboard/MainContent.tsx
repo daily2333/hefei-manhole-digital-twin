@@ -11,7 +11,6 @@ import {
   ToolOutlined,
   AppstoreOutlined,
   BarChartOutlined,
-  EnvironmentOutlined,
   VideoCameraOutlined,
   PieChartOutlined,
   SettingOutlined,
@@ -25,7 +24,7 @@ import { ErrorBoundary } from '../layout/ErrorBoundary';
 
 const DashboardTab = lazy(() => import('./DashboardTab'));
 const ManholeSceneWrapper = lazy(() => import('../3d-visualization/ManholeSceneWrapper'));
-const ManholeMap = lazy(() => import('../ManholeMap'));
+
 const UserManagement = lazy(() => import('../user-management/UserManagement'));
 const AlarmList = lazy(() => import('../alarm-management/AlarmList'));
 const MaintenanceManagement = lazy(() => import('../maintenance/MaintenanceManagement'));
@@ -130,22 +129,7 @@ const MainContent: React.FC<MainContentProps> = ({
         />
       )
     },
-    {
-      key: 'map',
-      label: <span><EnvironmentOutlined /> 地理分布</span>,
-      children: wrapLazyTab(
-        <div style={{ height: 'calc(100vh - 170px)', padding: '16px' }}>
-          <ErrorBoundary>
-            <ManholeMap
-              manholes={manholes}
-              onSelectManhole={handleSelectManholeById}
-              selectedManholeId={selectedManhole?.id}
-              style={{ height: '100%' }}
-            />
-          </ErrorBoundary>
-        </div>
-      )
-    },
+
     {
       key: 'alarms',
       label: (

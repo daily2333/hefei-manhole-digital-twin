@@ -9,10 +9,7 @@ import {
   Space, 
   Statistic, 
   Tabs, 
-  Table, 
-  Tooltip,
-  Divider,
-  Spin
+  Divider
 } from 'antd';
 import {
   BarChartOutlined,
@@ -22,15 +19,13 @@ import {
   ReloadOutlined,
   InfoCircleOutlined,
   DotChartOutlined,
-  TableOutlined
 } from '@ant-design/icons';
-import { ManholeInfo, ManholeStatus, ManholeAlarm, AlarmLevel, AlarmType } from '../../typings';
+import { ManholeInfo, ManholeAlarm } from '../../typings';
 import Chart from '../common/Chart';
 import type { ChartData } from '../common/Chart';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { TabPane } = Tabs;
 
 // 分析类型枚举
 enum AnalysisType {
@@ -64,7 +59,7 @@ const DataAnalytics: React.FC<DataAnalyticsProps> = ({
   alarms = []
 }) => {
   // 状态定义
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [analysisType, setAnalysisType] = useState<AnalysisType>(AnalysisType.TREND);
   const [dataType, setDataType] = useState<string>('alarm');
   const [dateRange, setDateRange] = useState<[Date, Date]>([
@@ -435,11 +430,13 @@ const DataAnalytics: React.FC<DataAnalyticsProps> = ({
   // 初始加载数据
   useEffect(() => {
     generateAnalysisData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataType, dateRange]);
   
   // 更新图表数据
   useEffect(() => {
     updateChartData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analysisType, trendData, distributionData, correlationData, anomalyData, comparisonData]);
   
   // 计算相关统计数据
@@ -506,26 +503,7 @@ const DataAnalytics: React.FC<DataAnalyticsProps> = ({
     }
   };
   
-  // 获取当前分析类型的适合图表类型
-  const getChartTypeForAnalysis = () => {
-    switch (analysisType) {
-      case AnalysisType.TREND:
-        return 'line';
-      case AnalysisType.DISTRIBUTION:
-        return 'pie';
-      case AnalysisType.CORRELATION:
-        return 'bar';
-      case AnalysisType.ANOMALY:
-        return 'line';
-      case AnalysisType.COMPARISON:
-        return 'bar';
-      default:
-        return 'line';
-    }
-  };
-  
   const stats = getStatisticsForTab();
-  const chartType = getChartTypeForAnalysis();
   
   return (
     <div className="data-analytics-container">
@@ -568,259 +546,261 @@ const DataAnalytics: React.FC<DataAnalyticsProps> = ({
         <Tabs 
           activeKey={analysisType}
           onChange={handleAnalysisTypeChange as any}
-        >
-          <TabPane 
-            tab={<span><LineChartOutlined /> 趋势分析</span>} 
-            key={AnalysisType.TREND}
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={18}>
-                <Card title={chartData.title} bodyStyle={{ height: 400 }}>
-                  <Chart type="line" data={chartData} height={350} />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card title="数据摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
-                  <Statistic 
-                    title="数据点数量" 
-                    value={stats.count || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="平均值" 
-                    value={stats.average || 0} 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="最大值" 
-                    value={stats.max || 0} 
-                    valueStyle={{ color: '#cf1322' }}
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="最小值" 
-                    value={stats.min || 0} 
-                    valueStyle={{ color: '#3f8600' }}
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <p>
-                    <InfoCircleOutlined /> 趋势分析展示了{getDataTypeLabel(dataType)}数据随时间的变化趋势
-                  </p>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-          
-          <TabPane 
-            tab={<span><PieChartOutlined /> 分布分析</span>} 
-            key={AnalysisType.DISTRIBUTION}
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={18}>
-                <Card title={chartData.title} bodyStyle={{ height: 400 }}>
-                  <Chart type="pie" data={chartData} height={350} />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card title="分布摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
-                  <Statistic 
-                    title="区域数量" 
-                    value={stats.count || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="总{getDataTypeLabel(dataType)}量" 
-                    value={stats.total || 0} 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="平均值" 
-                    value={stats.average || 0} 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="最大值" 
-                    value={stats.max || 0} 
-                    valueStyle={{ color: '#cf1322' }}
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <p>
-                    <InfoCircleOutlined /> 分布分析展示了不同区域的{getDataTypeLabel(dataType)}数据分布情况
-                  </p>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-          
-          <TabPane 
-            tab={<span><DotChartOutlined /> 相关性分析</span>} 
-            key={AnalysisType.CORRELATION}
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={18}>
-                <Card title={chartData.title} bodyStyle={{ height: 400 }}>
-                  <Chart type="bar" data={chartData} height={350} />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card title="相关性摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
-                  <Statistic 
-                    title="指标数量" 
-                    value={stats.count || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="正相关" 
-                    value={stats.positive || 0} 
-                    suffix="个" 
-                    valueStyle={{ color: '#3f8600' }}
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="负相关" 
-                    value={stats.negative || 0} 
-                    suffix="个" 
-                    valueStyle={{ color: '#cf1322' }}
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="无明显相关" 
-                    value={stats.neutral || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <p>
-                    <InfoCircleOutlined /> 相关性分析展示了{getDataTypeLabel(dataType)}数据与其他指标的相关性
-                  </p>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-          
-          <TabPane 
-            tab={<span><LineChartOutlined /> 异常检测</span>} 
-            key={AnalysisType.ANOMALY}
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={18}>
-                <Card title={chartData.title} bodyStyle={{ height: 400 }}>
-                  <Chart type="line" data={chartData} height={350} options={{
-                    series: [{
-                      name: '数据点',
-                      type: 'line',
-                      data: anomalyData.map(item => [item.date, item.value]),
-                      markPoint: {
-                        data: anomalyData.filter(item => item.isAnomaly).map(item => ({
-                          name: '异常点',
-                          value: item.value,
-                          xAxis: item.date,
-                          yAxis: item.value,
-                          itemStyle: {
-                            color: '#ff4d4f'
+          items={[
+            {
+              label: <span><LineChartOutlined /> 趋势分析</span>,
+              key: AnalysisType.TREND,
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col span={18}>
+                    <Card title={chartData.title} bodyStyle={{ height: 400 }}>
+                      <Chart type="line" data={chartData} height={350} />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card title="数据摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
+                      <Statistic 
+                        title="数据点数量" 
+                        value={stats.count || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="平均值" 
+                        value={stats.average || 0} 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="最大值" 
+                        value={stats.max || 0} 
+                        valueStyle={{ color: '#cf1322' }}
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="最小值" 
+                        value={stats.min || 0} 
+                        valueStyle={{ color: '#3f8600' }}
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <p>
+                        <InfoCircleOutlined /> 趋势分析展示了{getDataTypeLabel(dataType)}数据随时间的变化趋势
+                      </p>
+                    </Card>
+                  </Col>
+                </Row>
+              )
+            },
+            {
+              label: <span><PieChartOutlined /> 分布分析</span>,
+              key: AnalysisType.DISTRIBUTION,
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col span={18}>
+                    <Card title={chartData.title} bodyStyle={{ height: 400 }}>
+                      <Chart type="pie" data={chartData} height={350} />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card title="分布摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
+                      <Statistic 
+                        title="区域数量" 
+                        value={stats.count || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="总{getDataTypeLabel(dataType)}量" 
+                        value={stats.total || 0} 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="平均值" 
+                        value={stats.average || 0} 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="最大值" 
+                        value={stats.max || 0} 
+                        valueStyle={{ color: '#cf1322' }}
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <p>
+                        <InfoCircleOutlined /> 分布分析展示了不同区域的{getDataTypeLabel(dataType)}数据分布情况
+                      </p>
+                    </Card>
+                  </Col>
+                </Row>
+              )
+            },
+            {
+              label: <span><DotChartOutlined /> 相关性分析</span>,
+              key: AnalysisType.CORRELATION,
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col span={18}>
+                    <Card title={chartData.title} bodyStyle={{ height: 400 }}>
+                      <Chart type="bar" data={chartData} height={350} />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card title="相关性摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
+                      <Statistic 
+                        title="指标数量" 
+                        value={stats.count || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="正相关" 
+                        value={stats.positive || 0} 
+                        suffix="个" 
+                        valueStyle={{ color: '#3f8600' }}
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="负相关" 
+                        value={stats.negative || 0} 
+                        suffix="个" 
+                        valueStyle={{ color: '#cf1322' }}
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="无明显相关" 
+                        value={stats.neutral || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <p>
+                        <InfoCircleOutlined /> 相关性分析展示了{getDataTypeLabel(dataType)}数据与其他指标的相关性
+                      </p>
+                    </Card>
+                  </Col>
+                </Row>
+              )
+            },
+            {
+              label: <span><LineChartOutlined /> 异常检测</span>,
+              key: AnalysisType.ANOMALY,
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col span={18}>
+                    <Card title={chartData.title} bodyStyle={{ height: 400 }}>
+                      <Chart type="line" data={chartData} height={350} options={{
+                        series: [{
+                          name: '数据点',
+                          type: 'line',
+                          data: anomalyData.map(item => [item.date, item.value]),
+                          markPoint: {
+                            data: anomalyData.filter(item => item.isAnomaly).map(item => ({
+                              name: '异常点',
+                              value: item.value,
+                              xAxis: item.date,
+                              yAxis: item.value,
+                              itemStyle: {
+                                color: '#ff4d4f'
+                              }
+                            }))
                           }
-                        }))
+                        }]
+                      }} />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card title="异常检测摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
+                      <Statistic 
+                        title="数据点数量" 
+                        value={stats.count || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="异常点数量" 
+                        value={stats.anomalyCount || 0} 
+                        suffix="个" 
+                        valueStyle={{ color: '#cf1322' }}
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="异常率" 
+                        value={stats.anomalyRate || 0} 
+                        suffix="%" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <p>
+                        <InfoCircleOutlined /> 异常检测分析展示了{getDataTypeLabel(dataType)}数据中的异常点
+                      </p>
+                    </Card>
+                  </Col>
+                </Row>
+              )
+            },
+            {
+              label: <span><BarChartOutlined /> 对比分析</span>,
+              key: AnalysisType.COMPARISON,
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col span={18}>
+                    <Card title={chartData.title} bodyStyle={{ height: 400 }}>
+                      <Chart type="bar" data={chartData} height={350} />
+                    </Card>
+                  </Col>
+                  <Col span={6}>
+                    <Card title="对比摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
+                      <Statistic 
+                        title="区域数量" 
+                        value={stats.count || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      <Statistic 
+                        title="指标数量" 
+                        value={stats.metrics || 0} 
+                        suffix="个" 
+                      />
+                      <Divider style={{ margin: '12px 0' }} />
+                      
+                      {comparisonData.length > 0 && Object.keys(comparisonData[0])
+                        .filter(key => key !== 'area')
+                        .map((category, index) => (
+                          <React.Fragment key={index}>
+                            <Statistic 
+                              title={`${category}平均值`} 
+                              value={
+                                (comparisonData.reduce((sum, item) => sum + item[category], 0) / 
+                                comparisonData.length).toFixed(2)
+                              } 
+                            />
+                            <Divider style={{ margin: '12px 0' }} />
+                          </React.Fragment>
+                        ))
                       }
-                    }]
-                  }} />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card title="异常检测摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
-                  <Statistic 
-                    title="数据点数量" 
-                    value={stats.count || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="异常点数量" 
-                    value={stats.anomalyCount || 0} 
-                    suffix="个" 
-                    valueStyle={{ color: '#cf1322' }}
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="异常率" 
-                    value={stats.anomalyRate || 0} 
-                    suffix="%" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <p>
-                    <InfoCircleOutlined /> 异常检测分析展示了{getDataTypeLabel(dataType)}数据中的异常点
-                  </p>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-          
-          <TabPane 
-            tab={<span><BarChartOutlined /> 对比分析</span>} 
-            key={AnalysisType.COMPARISON}
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={18}>
-                <Card title={chartData.title} bodyStyle={{ height: 400 }}>
-                  <Chart type="bar" data={chartData} height={350} />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card title="对比摘要" bodyStyle={{ height: 400, overflow: 'auto' }}>
-                  <Statistic 
-                    title="区域数量" 
-                    value={stats.count || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  <Statistic 
-                    title="指标数量" 
-                    value={stats.metrics || 0} 
-                    suffix="个" 
-                  />
-                  <Divider style={{ margin: '12px 0' }} />
-                  
-                  {comparisonData.length > 0 && Object.keys(comparisonData[0])
-                    .filter(key => key !== 'area')
-                    .map((category, index) => (
-                      <React.Fragment key={index}>
-                        <Statistic 
-                          title={`${category}平均值`} 
-                          value={
-                            (comparisonData.reduce((sum, item) => sum + item[category], 0) / 
-                            comparisonData.length).toFixed(2)
-                          } 
-                        />
-                        <Divider style={{ margin: '12px 0' }} />
-                      </React.Fragment>
-                    ))
-                  }
-                  
-                  <p>
-                    <InfoCircleOutlined /> 对比分析展示了不同区域{getDataTypeLabel(dataType)}数据的对比情况
-                  </p>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-        </Tabs>
+                      
+                      <p>
+                        <InfoCircleOutlined /> 对比分析展示了不同区域{getDataTypeLabel(dataType)}数据的对比情况
+                      </p>
+                    </Card>
+                  </Col>
+                </Row>
+              )
+            }
+          ]}
+        />
       </Card>
     </div>
   );

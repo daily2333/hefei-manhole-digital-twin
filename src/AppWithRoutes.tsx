@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Button, ConfigProvider, theme } from 'antd';
 import App from './App';
-import HefeiMapPage from './pages/HefeiMapPage';
 
 /**
  * 带路由的应用入口
@@ -42,13 +41,10 @@ const AppWithRoutes: React.FC = () => {
           <Button type="primary" style={{ marginRight: '10px' }}>
             <Link to="/" style={{ color: 'white' }}>主页</Link>
           </Button>
-          <Button type="primary">
-            <Link to="/hefei-map" style={{ color: 'white' }}>合肥地图</Link>
-          </Button>
+
         </div>
         <Routes>
           <Route path="/" element={<App />} />
-          <Route path="/hefei-map" element={<HefeiMapPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

@@ -15,14 +15,9 @@
 
 ## 项目定位
 
-这是一个“智能井盖数字孪生”前端项目，核心目标是用大屏/控制台风格界面展示井盖资产、实时监测、告警、维护、地图分布、3D 可视化、预测分析、环境数据、统计报表、数据检索和系统设置。
+这是一个"智能井盖数字孪生"前端项目，核心目标是用大屏/控制台风格界面展示井盖资产、实时监测、告警、维护、3D 可视化、预测分析、环境数据、统计报表、数据检索和系统设置。
 
-当前实现明显偏向“前端演示平台 + 模拟数据驱动”，不是直接连接真实后端的生产系统：
-
-- 绝大多数业务数据来自 `src/mock-data`。
-- 实时数据通过 Hook + 定时器模拟更新。
-- 预测分析基于前端内的简单线性回归和 Z-Score 异常检测。
-- 地图和 3D 场景做了较多展示与性能优化，但数据源仍以模拟为主。
+所有数据来自 Express + SQLite 后端（端口 4000），不再使用前端模拟数据。MQTT 接口已预留用于 IoT 设备数据接入。
 
 ## 技术栈
 
@@ -65,16 +60,12 @@
     - `selectedManhole`
     - `realTimeDataMap`
     - `alarms`
-    - `maintenanceRecords`
     - `activeTab`
     - `notifications`
     - `loading`
     - `performanceScore`
-  - 首次加载时调用 `generateEnhancedManholes(30)` 生成井盖基础数据。
-  - 然后生成：
-    - 实时数据 `Map`
-    - 告警列表
-    - 维护记录
+  - 首次加载时调用 `loadBootstrapData()` 从后端 API 加载数据。
+  - 定时刷新实时数据（30s）和告警（15s）。
   - 通过 `MainContent` 把主数据分发给各业务模块。
   - 主题是深色大屏风格，Ant Design Token 在此和 `AppLayout` 里都有重复配置。
 
@@ -151,13 +142,7 @@
 - `user-management`
   - 用户管理。
 
-### `src/mock-data`
-
-- `manholes.ts`
-  - 主模拟数据源。
-  - 负责生成井盖、实时数据、告警、维护、健康评分历史。
-- `hefeiManholes.ts`
-  - 合肥地图专用模拟数据，默认生成 150 个点。
+（mock-data 目录已于 2026-05-14 删除，所有数据来自后端 API。）
 
 ### `src/hooks`
 
@@ -251,59 +236,7 @@
 
 - `0.4 * 传感器 + 0.3 * 电池 + 0.3 * 通信`
 
-## 模拟数据机制
-
-### 井盖主数据
-
-`src/mock-data/manholes.ts`
-
-- `generateMockManholes(count)`
-  - 随机生成井盖基础资产。
-  - 状态分布大致为：
-    - 正常 60%
-    - 预警 15%
-    - 报警 10%
-    - 维护 5%
-    - 离线 10%
-
-### 实时数据
-
-- `generateMockRealTimeData(manholeId, statusOverride?)`
-  - 按“井盖 ID + 当前小时”生成稳定数据。
-  - 使用 `lastGeneratedData` 保留上一轮结果，避免波动太大。
-  - 变化考虑了：
-    - 季节
-    - 日内温度周期
-    - 状态覆盖（正常/预警/报警/维护/离线）
-  - 不同状态会改变温度、湿度、气体、水位、电量、信号和井盖开合状态。
-
-### 告警
-
-- `generateMockAlarms(manholes)`
-  - 为符合条件的井盖按概率生成告警。
-  - 用历史样本 + `detectAnomaly` 做 Z-Score 异常判断。
-  - 再通过 `determineAlarmLevel` 决定级别。
-
-### 维护记录
-
-- `generateMockMaintenanceRecords(manholes)`
-  - 每个井盖随机生成 0 到 2 条维护记录。
-
-### 增强井盖
-
-- `generateEnhancedManholes(count)`
-  - 在基础井盖上补齐：
-    - `latestData`
-    - `healthScore`
-
-### 合肥专题数据
-
-`src/mock-data/hefeiManholes.ts`
-
-- 以合肥市中心坐标为基础随机生成点位。
-- 70% 点位围绕地标分布，30% 全市范围随机分布。
-- 地址、行政区、街道名都做了合肥本地化模拟。
-- 默认导出 `hefeiManholes = generateHefeiManholes(150)`。
+（mock-data 目录已于 2026-05-14 删除，所有数据来自后端 API。）
 
 ## 实时数据与性能策略
 
@@ -511,7 +444,6 @@
 ## 报表页面
 
 - `src/pages/DailyReportPage.tsx`
-  - 自己构造了一份 20 条井盖的 mock 数据。
   - 渲染 `ReportContainer`。
 - `src/components/reports/DailyReport.tsx`
   - 日报展示组件。
@@ -569,6 +501,8 @@
 
 但当前已读主流程里没有看到真实后端接入成为主路径，系统核心仍由 mock 驱动。
 
+（mock-data 目录已于 2026-05-14 删除，所有数据来自后端 API。）
+
 ### 4. 高德密钥直接硬编码在源码
 
 这在真实生产环境是风险点。后续若做部署或开源整理，应转环境变量或服务端代理。
@@ -605,13 +539,97 @@
 ## 后续代理接手时的高价值认知
 
 - 先确认修改目标属于“主应用控制台”还是“合肥专题地图”。
-- 涉及数据口径时，优先检查 `src/typings/index.ts` 和 `src/mock-data/manholes.ts`。
+- 涉及数据口径时，优先检查 `src/typings/index.ts`。
+- 涉及 API 调用时，优先检查 `src/services/api/` 目录和 `server/src/routes/`。
 - 涉及实时刷新/性能问题时，优先检查 `src/App.tsx` 与 `src/hooks/useRealTimeData.ts`。
-- 涉及地图问题时，先看 `src/config/mapConfig.ts`、`src/utils/mapLoader.ts`、`src/components/amap`、`src/components/ManholeMap.tsx`。
+- 涉及地图问题时，地理分布功能已被移除（2026-05-14），相关文件已删除。
 - 涉及 3D 问题时，先看 `src/components/3d-visualization`。
 - 涉及预测/健康评分时，先看 `src/services/predictionService.ts` 和 `src/utils/healthScoreUtils.ts`。
 - 涉及设置/主题时，先看 `SettingsContext` 和 `settingsUtils.ts`。
 
+## 服务端架构
+
+### 服务端口
+
+```
+server/
+├── package.json
+├── data/               ← SQLite 数据库文件（自动生成）
+└── src/
+    ├── index.js        ← Express 入口（端口 4000）
+    ├── db.js           ← SQLite 初始化 + schema
+    ├── seed.js         ← 种子数据生成（30 条井盖 + 24h 实时数据）
+    ├── routes/
+    │   ├── manholes.js     ← /api/manholes
+    │   ├── realtime.js     ← /api/realtime
+    │   ├── alarms.js       ← /api/alarms
+    │   ├── maintenance.js  ← /api/maintenance
+    │   └── stats.js        ← /api/stats
+    └── mqtt/
+        └── client.js       ← MQTT 订阅（配置 MQTT_BROKER 环境变量启用）
+```
+
+### 启动方式
+
+```bash
+# 仅后端
+npm run server
+
+# 种子数据
+npm run server:seed
+
+# 前后端同时启动
+npm run dev
+```
+
+### MQTT 对接
+
+MQTT 客户端默认关闭。设置环境变量启用：
+
+```bash
+set MQTT_BROKER=mqtt://your-broker:1883
+npm run server
+```
+
+数据格式要求（JSON payload）：
+```json
+{
+  "temperature": 25.5,
+  "humidity": 60,
+  "water_level": 12.3,
+  "ch4": 0.5,
+  "battery_level": 85,
+  "cover_status": "closed"
+}
+```
+
+### 数据源切换
+
+前端通过 `REACT_APP_DATA_SOURCE` 环境变量控制数据源：
+
+```bash
+# mock 模式（默认）
+set REACT_APP_DATA_SOURCE=mock
+npm start
+
+# API 模式
+set REACT_APP_DATA_SOURCE=api
+set REACT_APP_API_BASE_URL=http://localhost:4000/api
+npm start
+```
+
+API 模式下前端调用后端 REST API，后端数据来自 SQLite。
+MQTT 数据到达时自动入库并通过 WebSocket 推送到前端。
+
+### 数据库表
+
+- `manholes` — 井盖主资产
+- `real_time_data` — 实时数据（含水位/气体/温湿度/电池/信号/井盖状态）
+- `alarms` — 告警记录
+- `maintenance_records` — 维护记录
+- `health_scores` — 健康评分历史
+- `users` — 用户管理
+
 ## 一句话总结
 
-这是一个以合肥城市井盖为场景、以模拟数据驱动、融合地图与 3D 可视化的 React/TypeScript 智能运维数字孪生前端平台，重点在展示、监控、分析和运维工作台能力，而不是当前就绪的真实后端生产系统。
+这是一个以合肥城市井盖为场景、以模拟数据驱动、融合 3D 可视化的 React/TypeScript 智能运维数字孪生前端平台，现已配备 Node.js + Express + SQLite 服务端和后端 API 层，MQTT 接口已预留。

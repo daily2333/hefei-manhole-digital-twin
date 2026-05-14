@@ -1,72 +1,58 @@
 import React from 'react';
-import { Badge, Button, Space, Tooltip } from 'antd';
-import {
-  BellOutlined,
-  FullscreenExitOutlined,
-  FullscreenOutlined,
-  QuestionCircleOutlined,
-  RadarChartOutlined,
-  UserOutlined
-} from '@ant-design/icons';
+import { Layout, Button, Badge } from 'antd';
+import { BellOutlined, QuestionCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { SystemStatusPanel } from './SystemStatusPanel';
+
+const { Header } = Layout;
 
 interface AppHeaderProps {
   currentTime: Date;
   notifications: number;
   onClearNotifications: () => void;
-  isFullscreen: boolean;
-  toggleFullScreen: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({
-  currentTime,
+/**
+ * 应用头部组件
+ * 包含标题、系统状态和头部控制按钮
+ */
+export const AppHeader: React.FC<AppHeaderProps> = ({ 
+  currentTime, 
   notifications,
-  onClearNotifications,
-  isFullscreen,
-  toggleFullScreen
+  onClearNotifications
 }) => {
   return (
-    <header className="header-shell">
-      <div className="brand-lockup">
-        <div className="brand-mark">
-          <RadarChartOutlined />
-        </div>
-        <div>
-          <div className="brand-eyebrow">Smart Infrastructure Twin</div>
-          <h1 className="brand-title">城市井盖数字孪生指挥台</h1>
-          <div className="brand-subtitle">一体化态势监控、空间分析、告警响应与现场运维</div>
+    <Header className="header-container">
+      <div className="logo-area">
+        <div className="city-logo"></div>
+        <div className="platform-title">
+          <h1>智能井盖中央管理平台</h1>
         </div>
       </div>
-
-      <div className="header-side">
+      
+      <div className="header-controls">
         <SystemStatusPanel currentTime={currentTime} />
-        <Space size={8}>
-          <Tooltip title={isFullscreen ? '退出全屏' : '进入全屏'}>
-            <Button
-              type="text"
-              className="header-action"
-              icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-              onClick={toggleFullScreen}
-            />
-          </Tooltip>
-          <Tooltip title="清空通知">
-            <Badge count={notifications} size="small">
-              <Button
-                type="text"
-                className="header-action"
-                icon={<BellOutlined />}
-                onClick={onClearNotifications}
-              />
-            </Badge>
-          </Tooltip>
-          <Tooltip title="帮助中心">
-            <Button type="text" className="header-action" icon={<QuestionCircleOutlined />} />
-          </Tooltip>
-          <Tooltip title="运维账号">
-            <Button type="text" className="header-action" icon={<UserOutlined />} />
-          </Tooltip>
-        </Space>
+        
+        <Badge count={notifications} size="small">
+          <Button 
+            type="text" 
+            icon={<BellOutlined />} 
+            className="header-icon-button"
+            onClick={onClearNotifications}
+          />
+        </Badge>
+        
+        <Button 
+          type="text" 
+          icon={<QuestionCircleOutlined />} 
+          className="header-icon-button"
+        />
+        
+        <Button 
+          type="text" 
+          icon={<UserOutlined />} 
+          className="header-icon-button"
+        />
       </div>
-    </header>
+    </Header>
   );
-};
+}; 

@@ -24,7 +24,7 @@ const DeviceHealthPanel: React.FC<DeviceHealthPanelProps> = ({
 }) => {
   const [healthData, setHealthData] = useState<{
     healthScore: number;
-    estimatedLifeRemaining: string;
+    estimatedLifeRemaining: number;
     recommendations: string[];
   } | null>(null);
   
@@ -44,7 +44,8 @@ const DeviceHealthPanel: React.FC<DeviceHealthPanelProps> = ({
       // 模拟数据处理延迟
       setTimeout(() => {
         // 获取设备健康数据
-        const healthResults = predictionService.predictDeviceHealth(manholeInfo, recentData);
+        const latestData = recentData[recentData.length - 1] || recentData[0];
+        const healthResults = predictionService.predictDeviceHealth(latestData, manholeInfo.status, manholeInfo.installationDate);
         setHealthData(healthResults);
         
         // 获取异常数据
@@ -192,7 +193,7 @@ const DeviceHealthPanel: React.FC<DeviceHealthPanelProps> = ({
               <Tooltip title="预计设备剩余使用寿命">
                 <FieldTimeOutlined style={{ marginRight: 8, color: '#1677ff' }} /> 
                 <span style={{ color: '#1677ff' }}>预计剩余寿命:</span>
-                <span style={{ marginLeft: 8 }} className="highlight-value">{healthData.estimatedLifeRemaining}</span>
+                <span style={{ marginLeft: 8 }} className="highlight-value">{healthData.estimatedLifeRemaining}天</span>
               </Tooltip>
             </div>
           </div>

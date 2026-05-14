@@ -27,23 +27,19 @@ import {
   ClockCircleOutlined,
   UserOutlined,
   PhoneOutlined,
-  EnvironmentOutlined,
   PlusOutlined,
   SearchOutlined,
-  HistoryOutlined,
   FileTextOutlined,
-  ScheduleOutlined,
   CalendarOutlined,
-  CloseCircleOutlined,
   BarChartOutlined
 } from '@ant-design/icons';
 import { MaintenanceRecord, MaintenanceType, ManholeInfo } from '../../typings';
-import { generateMockMaintenanceRecords, generateEnhancedManholes } from '../../mock-data/manholes';
+import { fetchMaintenanceRecords, fetchManholes } from '../../services/api';
 import { formatDateTime } from '../../utils';
 import ReactECharts from 'echarts-for-react';
 import dayjs from 'dayjs';
 
-const { TabPane } = Tabs;
+
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -74,24 +70,18 @@ const MaintenanceManagement: React.FC = () => {
   // 当前日期
   const [currentDate, setCurrentDate] = useState(dayjs());
 
-  // 获取模拟数据
   const fetchMaintenanceData = useCallback(async () => {
     setLoading(true);
     try {
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // 获取模拟井盖数据
-      const mockManholes = generateEnhancedManholes(30);
-      setManholes(mockManholes);
-      
-      // 获取模拟维护记录数据
-      const mockRecords = generateMockMaintenanceRecords(mockManholes);
-      
-      // 按时间排序，最新的在前面
-      mockRecords.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-      
-      setMaintenanceRecords(mockRecords);
+      const [records, manholesData] = await Promise.all([
+        fetchMaintenanceRecords(),
+        fetchManholes()
+      ]);
+
+      records.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+      setManholes(manholesData);
+      setMaintenanceRecords(records);
     } catch (error) {
       console.error('获取维护记录数据失败:', error);
     } finally {
@@ -103,36 +93,15 @@ const MaintenanceManagement: React.FC = () => {
   useEffect(() => {
     fetchMaintenanceData();
     
-    // 设置定时刷新 - 每10分钟刷新一次，避免频繁刷新
+    // 设置定时刷新 - 每10分钟从API刷新一次
     const intervalId = setInterval(() => {
-      // 只对部分数据做增量更新，避免全量刷新带来的巨大差异
-      setMaintenanceRecords(prevRecords => {
-        // 随机选择1-2条记录进行状态更新
-        const updatedRecords = [...prevRecords];
-        const updateCount = Math.floor(Math.random() * 2) + 1;
-        
-        for (let i = 0; i < updateCount; i++) {
-          const index = Math.floor(Math.random() * updatedRecords.length);
-          // 有30%的概率将进行中的维护标记为已完成
-          if (updatedRecords[index].status === 'inProgress' && Math.random() < 0.3) {
-            updatedRecords[index] = {
-              ...updatedRecords[index],
-              status: 'completed',
-              completionTime: new Date().toISOString()
-            };
-          }
-        }
-        
-        // 有5%的概率添加1条新维护记录
-        if (Math.random() < 0.05) {
-          const mockManholes = generateEnhancedManholes(5);
-          const newRecords = generateMockMaintenanceRecords(mockManholes).slice(0, 1);
-          return [...newRecords, ...updatedRecords];
-        }
-        
-        return updatedRecords;
+      fetchMaintenanceRecords().then(records => {
+        records.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+        setMaintenanceRecords(records);
+      }).catch(err => {
+        console.error('定时刷新维护记录失败:', err);
       });
-    }, 600000); // 10分钟更新一次
+    }, 600000);
     
     return () => clearInterval(intervalId);
   }, [fetchMaintenanceData]);
@@ -214,28 +183,22 @@ const MaintenanceManagement: React.FC = () => {
       render: (status: string) => {
         let color = '';
         let text = '';
-        let icon = null;
-        
         switch (status) {
           case 'pending':
             color = 'default';
             text = '待处理';
-            icon = <ClockCircleOutlined />;
             break;
           case 'inProgress':
             color = 'processing';
             text = '进行中';
-            icon = <SyncOutlined spin />;
             break;
           case 'completed':
             color = 'success';
             text = '已完成';
-            icon = <CheckCircleOutlined />;
             break;
           case 'cancelled':
             color = 'error';
             text = '已取消';
-            icon = <CloseCircleOutlined />;
             break;
           default:
             color = 'default';
@@ -500,7 +463,7 @@ const MaintenanceManagement: React.FC = () => {
         ))}
         {records.length > 2 && (
           <li style={{ fontSize: '12px' }}>
-            <a>更多 {records.length - 2} 项...</a>
+            <Button type="link">更多 {records.length - 2} 项...</Button>
           </li>
         )}
       </ul>
@@ -584,139 +547,130 @@ const MaintenanceManagement: React.FC = () => {
       
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col span={24}>
-          <Tabs activeKey={activeTab} onChange={setActiveTab} className="glass-card maintenance-tabs">
-            <TabPane 
-              tab={
-                <span>
-                  <FileTextOutlined />
-                  维护记录
-                </span>
-              } 
-              key="1"
-            >
-              <Card className="glass-card">
-                <Space style={{ marginBottom: 16 }} wrap>
-                  <Input
-                    placeholder="井盖ID"
-                    value={searchParams.manholeId}
-                    onChange={e => setSearchParams({ ...searchParams, manholeId: e.target.value })}
-                    style={{ width: 120 }}
-                    prefix={<SearchOutlined />}
-                  />
-                  
-                  <Select
-                    placeholder="维护类型"
-                    style={{ width: 150 }}
-                    allowClear
-                    value={searchParams.type}
-                    onChange={value => setSearchParams({ ...searchParams, type: value })}
-                  >
-                    {Object.values(MaintenanceType).map(type => (
-                      <Option key={type} value={type}>{type}</Option>
-                    ))}
-                  </Select>
-                  
-                  <Select
-                    placeholder="状态"
-                    style={{ width: 120 }}
-                    allowClear
-                    value={searchParams.status}
-                    onChange={value => setSearchParams({ ...searchParams, status: value })}
-                  >
-                    <Option value="pending">待处理</Option>
-                    <Option value="inProgress">进行中</Option>
-                    <Option value="completed">已完成</Option>
-                    <Option value="cancelled">已取消</Option>
-                  </Select>
-                  
-                  <RangePicker 
-                    style={{ width: 240 }}
-                    onChange={values => setSearchParams({ ...searchParams, dateRange: values as any })}
-                  />
-                  
-                  <Button
-                    type="primary"
-                    onClick={() => setSearchParams({
-                      manholeId: '',
-                      type: undefined,
-                      status: undefined,
-                      dateRange: undefined
-                    })}
-                  >
-                    重置
-                  </Button>
-                </Space>
-                
-                <Table
-                  columns={columns}
-                  dataSource={filteredRecords}
-                  rowKey="id"
-                  pagination={{ pageSize: 10 }}
-                  scroll={{ x: 1500 }}
-                />
-              </Card>
-            </TabPane>
-            
-            <TabPane 
-              tab={
-                <span>
-                  <BarChartOutlined />
-                  维护分析
-                </span>
-              } 
-              key="2"
-            >
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Card 
-                    title="维护类型分布" 
-                    className="glass-card"
-                  >
-                    <ReactECharts option={typeChartOption} style={{ height: 300 }} />
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            className="glass-card maintenance-tabs"
+            items={[
+              {
+                key: '1',
+                label: <span><FileTextOutlined />维护记录</span>,
+                children: (
+                  <Card className="glass-card">
+                    <Space style={{ marginBottom: 16 }} wrap>
+                      <Input
+                        placeholder="井盖ID"
+                        value={searchParams.manholeId}
+                        onChange={e => setSearchParams({ ...searchParams, manholeId: e.target.value })}
+                        style={{ width: 120 }}
+                        prefix={<SearchOutlined />}
+                      />
+                      
+                      <Select
+                        placeholder="维护类型"
+                        style={{ width: 150 }}
+                        allowClear
+                        value={searchParams.type}
+                        onChange={value => setSearchParams({ ...searchParams, type: value })}
+                      >
+                        {Object.values(MaintenanceType).map(type => (
+                          <Option key={type} value={type}>{type}</Option>
+                        ))}
+                      </Select>
+                      
+                      <Select
+                        placeholder="状态"
+                        style={{ width: 120 }}
+                        allowClear
+                        value={searchParams.status}
+                        onChange={value => setSearchParams({ ...searchParams, status: value })}
+                      >
+                        <Option value="pending">待处理</Option>
+                        <Option value="inProgress">进行中</Option>
+                        <Option value="completed">已完成</Option>
+                        <Option value="cancelled">已取消</Option>
+                      </Select>
+                      
+                      <RangePicker 
+                        style={{ width: 240 }}
+                        onChange={values => setSearchParams({ ...searchParams, dateRange: values as any })}
+                      />
+                      
+                      <Button
+                        type="primary"
+                        onClick={() => setSearchParams({
+                          manholeId: '',
+                          type: undefined,
+                          status: undefined,
+                          dateRange: undefined
+                        })}
+                      >
+                        重置
+                      </Button>
+                    </Space>
+                    
+                    <Table
+                      columns={columns}
+                      dataSource={filteredRecords}
+                      rowKey="id"
+                      pagination={{ pageSize: 10 }}
+                      scroll={{ x: 1500 }}
+                    />
                   </Card>
-                </Col>
-                <Col span={12}>
-                  <Card 
-                    title="维护状态分布" 
-                    className="glass-card"
-                  >
-                    <ReactECharts option={statusChartOption} style={{ height: 300 }} />
+                ),
+              },
+              {
+                key: '2',
+                label: <span><BarChartOutlined />维护分析</span>,
+                children: (
+                  <Row gutter={[16, 16]}>
+                    <Col span={12}>
+                      <Card 
+                        title="维护类型分布" 
+                        className="glass-card"
+                      >
+                        <ReactECharts option={typeChartOption} style={{ height: 300 }} />
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                      <Card 
+                        title="维护状态分布" 
+                        className="glass-card"
+                      >
+                        <ReactECharts option={statusChartOption} style={{ height: 300 }} />
+                      </Card>
+                    </Col>
+                  </Row>
+                ),
+              },
+              {
+                key: '3',
+                label: <span><CalendarOutlined />维护日历</span>,
+                children: (
+                  <Card className="glass-card">
+                    <Alert
+                      message={`选中日期: ${currentDate.format('YYYY-MM-DD')}`}
+                      description={`${getCalendarData(currentDate).length} 条维护记录`}
+                      type="info"
+                      showIcon
+                      style={{ marginBottom: 16 }}
+                    />
+                    <Calendar 
+                      value={currentDate}
+                      onSelect={setCurrentDate}
+                      dateCellRender={dateCellRender}
+                    />
                   </Card>
-                </Col>
-              </Row>
-            </TabPane>
-            
-            <TabPane 
-              tab={
-                <span>
-                  <CalendarOutlined />
-                  维护日历
-                </span>
-              } 
-              key="3"
-            >
-              <Card className="glass-card">
-                <Alert
-                  message={`选中日期: ${currentDate.format('YYYY-MM-DD')}`}
-                  description={`${getCalendarData(currentDate).length} 条维护记录`}
-                  type="info"
-                  showIcon
-                  style={{ marginBottom: 16 }}
-                />
-                <Calendar 
-                  value={currentDate}
-                  onSelect={setCurrentDate}
-                  dateCellRender={dateCellRender}
-                />
-              </Card>
-            </TabPane>
-          </Tabs>
+                ),
+              },
+            ]}
+          />
         </Col>
       </Row>
       
       <Modal
         title="添加维护记录"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleCancel}
         onOk={handleSubmit}
         width={600}

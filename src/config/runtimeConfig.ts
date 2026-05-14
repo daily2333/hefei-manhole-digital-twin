@@ -1,7 +1,4 @@
 export const runtimeConfig = {
-  dataSource: (process.env.REACT_APP_DATA_SOURCE || 'mock').toLowerCase(),
-  apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api/v1',
-  wsUrl: process.env.REACT_APP_WS_URL || 'http://localhost:3001'
+  apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000/api',
+  wsUrl: process.env.REACT_APP_WS_URL || 'http://localhost:4000',
 };
-
-export const isApiMode = runtimeConfig.dataSource === 'api';

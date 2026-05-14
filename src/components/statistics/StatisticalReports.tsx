@@ -8,20 +8,13 @@ import {
   DatePicker, 
   Space, 
   Table, 
-  Tabs,
-  Typography,
   Divider,
-  Statistic,
-  Form,
   Radio,
-  Input,
   Tag,
   Tooltip,
-  Empty
 } from 'antd';
 import {
   AreaChartOutlined,
-  DownloadOutlined,
   ReloadOutlined,
   PrinterOutlined,
   PieChartOutlined,
@@ -30,7 +23,7 @@ import {
   FilePdfOutlined,
   LineChartOutlined
 } from '@ant-design/icons';
-import { ManholeInfo, AlarmType, AlarmLevel } from '../../typings';
+import { ManholeInfo, AlarmLevel } from '../../typings';
 
 // 模拟图表组件
 const Chart: React.FC<{ type: string, data: any, height?: number }> = ({ type, data, height = 300 }) => {
@@ -62,7 +55,7 @@ interface StatisticalReportsProps {
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { Text, Title } = Typography;
+
 
 // 报表类型
 enum ReportType {
@@ -99,7 +92,6 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
     new Date()
   ]);
   const [dimension, setDimension] = useState<StatDimension>(StatDimension.DEVICE);
-  const [activeTab, setActiveTab] = useState<string>('device');
   const [reportData, setReportData] = useState<any[]>([]);
   
   // 加载数据
@@ -116,6 +108,7 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
   // 初始加载
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportType, timeRange, dimension]);
   
   // 生成模拟报表数据
@@ -140,9 +133,6 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
   // 生成设备报表
   const generateDeviceReport = () => {
     const data = [];
-    const startDate = new Date(timeRange[0]);
-    const endDate = new Date(timeRange[1]);
-    
     // 模拟设备数据
     for (let i = 1; i <= 20; i++) {
       const device = {

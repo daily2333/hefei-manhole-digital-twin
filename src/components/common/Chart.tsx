@@ -409,7 +409,7 @@ const Chart: React.FC<ChartProps> = ({
   }, [type, data, options]);
 
   // 没有数据时显示Empty组件
-  if (!data || (data.points && data.points.length === 0) && (!data.series || data.series.length === 0)) {
+  if (!data || ((data.points && data.points.length === 0) && (!data.series || data.series.length === 0))) {
     return <Empty description="暂无数据" style={{ height, width }} />;
   }
 

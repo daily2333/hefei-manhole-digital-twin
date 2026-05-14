@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Card, 
   Row, 
@@ -9,34 +9,18 @@ import {
   Space, 
   Statistic, 
   Tabs, 
-  List,
   Tag,
-  Badge,
   Spin,
-  Timeline,
-  Divider,
   Alert,
-  Typography,
   Empty,
   Tooltip
 } from 'antd';
 import {
   ClockCircleOutlined,
-  SyncOutlined,
   DashboardOutlined,
-  BulbOutlined,
-  ThunderboltOutlined,
-  WifiOutlined,
   WarningOutlined,
-  SafetyOutlined,
-  BellOutlined,
-  ToolOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  LineChartOutlined,
   ReloadOutlined,
   AimOutlined,
-  EnvironmentOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   DisconnectOutlined,
@@ -45,30 +29,7 @@ import {
 import { ManholeInfo, ManholeRealTimeData, ManholeStatus, CoverStatus } from '../../typings';
 import { Line } from '@ant-design/charts';
 
-// 获取Tabs.TabPane组件
-const { TabPane } = Tabs;
 
-// 模拟图表组件
-const Chart: React.FC<{ type: string, data: any, height?: number }> = ({ type, data, height = 200 }) => {
-  return (
-    <div 
-      style={{ 
-        height: height, 
-        background: '#f0f2f5', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        borderRadius: '4px'
-      }}
-    >
-      {type === 'line' && <LineChartOutlined style={{ fontSize: 36, opacity: 0.5 }} />}
-      <div style={{ marginLeft: 10 }}>
-        <p style={{ margin: 0 }}>{data.title || '实时监控图表'}</p>
-        <p style={{ margin: 0, fontSize: 12, color: '#999' }}>数据点: {data?.points?.length || 0}</p>
-      </div>
-    </div>
-  );
-};
 
 interface RealTimeMonitoringProps {
   manholes?: ManholeInfo[];
@@ -76,7 +37,6 @@ interface RealTimeMonitoringProps {
 }
 
 const { Option } = Select;
-const { Text } = Typography;
 
 // 监控数据类型
 enum MonitoringType {
@@ -88,14 +48,7 @@ enum MonitoringType {
   COVER = 'cover'
 }
 
-// 设备状态优先级映射
-const STATUS_PRIORITY: Record<ManholeStatus, number> = { 
-  [ManholeStatus.Alarm]: 0, 
-  [ManholeStatus.Warning]: 1, 
-  [ManholeStatus.Normal]: 2, 
-  [ManholeStatus.Offline]: 3,
-  [ManholeStatus.Maintenance]: 4 
-};
+
 
 // 定义DeviceStatusPanel的属性类型
 interface DeviceStatusPanelProps {
@@ -230,9 +183,13 @@ const DetailMonitoringPanel = React.memo(({ selectedDevice, chartData }: DetailM
       </Row>
 
       {/* 图表显示区域 */}
-      <Tabs defaultActiveKey="summary">
-        <TabPane tab="总体状况" key="summary">
-          <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
+      <Tabs 
+        defaultActiveKey="summary"
+        items={[
+          {
+            label: '总体状况',
+            key: 'summary',
+            children: <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
             {chartData && chartData[MonitoringType.SUMMARY] ?
               <Line 
                 data={chartData[MonitoringType.SUMMARY].points || []}
@@ -244,9 +201,11 @@ const DetailMonitoringPanel = React.memo(({ selectedDevice, chartData }: DetailM
               /> : <Empty description="暂无数据" />
             }
           </ErrorBoundary>
-        </TabPane>
-        <TabPane tab="水位监测" key="water">
-          <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
+          },
+          {
+            label: '水位监测',
+            key: 'water',
+            children: <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
             {chartData && chartData[MonitoringType.WATER] ?
               <Line 
                 data={chartData[MonitoringType.WATER].points || []}
@@ -258,9 +217,11 @@ const DetailMonitoringPanel = React.memo(({ selectedDevice, chartData }: DetailM
               /> : <Empty description="暂无数据" />
             }
           </ErrorBoundary>
-        </TabPane>
-        <TabPane tab="气体浓度" key="gas">
-          <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
+          },
+          {
+            label: '气体浓度',
+            key: 'gas',
+            children: <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
             {chartData && chartData[MonitoringType.GAS] ?
               <Line 
                 data={chartData[MonitoringType.GAS].points || []}
@@ -272,9 +233,11 @@ const DetailMonitoringPanel = React.memo(({ selectedDevice, chartData }: DetailM
               /> : <Empty description="暂无数据" />
             }
           </ErrorBoundary>
-        </TabPane>
-        <TabPane tab="温度监测" key="temperature">
-          <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
+          },
+          {
+            label: '温度监测',
+            key: 'temperature',
+            children: <ErrorBoundary fallback={<Empty description="图表加载出错" />}>
             {chartData && chartData[MonitoringType.TEMPERATURE] ?
               <Line 
                 data={chartData[MonitoringType.TEMPERATURE].points || []}
@@ -286,8 +249,9 @@ const DetailMonitoringPanel = React.memo(({ selectedDevice, chartData }: DetailM
               /> : <Empty description="暂无数据" />
             }
           </ErrorBoundary>
-        </TabPane>
-      </Tabs>
+          },
+        ]}
+      />
     </Card>
   );
 });
@@ -301,15 +265,15 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
 }) => {
   const [selectedManholeId, setSelectedManholeId] = useState<string | null>(null);
   const [displayedDevices, setDisplayedDevices] = useState<ManholeInfo[]>([]);
-  const [chartData, setChartData] = useState<any>({});
+  const [, setChartData] = useState<any>({});
   const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('all');
   const [deviceLimit, setDeviceLimit] = useState<number>(6);
-  const [monitoringType, setMonitoringType] = useState<MonitoringType>(MonitoringType.SUMMARY);
+  const [monitoringType] = useState<MonitoringType>(MonitoringType.SUMMARY);
   const [loading, setLoading] = useState<boolean>(false);
   const [dataTimestamp, setDataTimestamp] = useState<string>(new Date().toISOString());
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [refreshInterval, setRefreshInterval] = useState<number>(3600); // 1小时刷新一次
-  const [eventLog, setEventLog] = useState<any[]>([]);
+  const [, setEventLog] = useState<any[]>([]);
   
   // 记录最后一次刷新的数据，用于比较变化
   const lastRefreshedDataRef = useRef<Map<string, ManholeRealTimeData>>(new Map());
@@ -329,19 +293,6 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   const handleSelectDevice = useCallback((deviceId: string) => {
     setSelectedManholeId(deviceId);
   }, []);
-  
-  // 帮助函数：获取监控类型的显示标签
-  const getMonitoringTypeLabel = (type: MonitoringType): string => {
-    switch (type) {
-      case MonitoringType.WATER: return '水位监测';
-      case MonitoringType.GAS: return '气体浓度';
-      case MonitoringType.TEMPERATURE: return '温度监测';
-      case MonitoringType.BATTERY: return '电池电量';
-      case MonitoringType.COVER: return '井盖状态';
-      case MonitoringType.SUMMARY: return '综合信息';
-      default: return '未知类型';
-    }
-  };
   
   // 更新图表数据函数定义在组件最顶部
   const updateChartData = useCallback((selectedId?: string | null, dataMap?: Map<string, ManholeRealTimeData>) => {
@@ -396,8 +347,6 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
     }
 
     // 获取季节和时间影响因子
-    const month = new Date().getMonth(); // 0-11
-    const season = Math.floor(((month + 1) % 12) / 3); // 将月份映射到季节(0-春, 1-夏, 2-秋, 3-冬)
     const hour = new Date().getHours(); // 获取当前小时(0-23)
     
     // 计算日周期温度因子 (-1到1)，中午最高，凌晨最低
@@ -513,8 +462,19 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
     points.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     // 生成一个结果对象
+    const getLabel = (type: MonitoringType): string => {
+      switch (type) {
+        case MonitoringType.WATER: return '水位监测';
+        case MonitoringType.GAS: return '气体浓度';
+        case MonitoringType.TEMPERATURE: return '温度监测';
+        case MonitoringType.BATTERY: return '电池电量';
+        case MonitoringType.COVER: return '井盖状态';
+        case MonitoringType.SUMMARY: return '综合信息';
+        default: return '未知类型';
+      }
+    };
     const result = {
-      title: `${selectedManhole.name} - ${getMonitoringTypeLabel(monitoringType)}`,
+      title: `${selectedManhole.name} - ${getLabel(monitoringType)}`,
       points
     };
     
@@ -526,13 +486,8 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
     };
     
     return result;
-  }, [manholes, monitoringType, selectedManholeId, loading, getMonitoringTypeLabel]);
+  }, [manholes, monitoringType, selectedManholeId, loading]);
 
-  // 获取选中设备的实时数据
-  const realTimeData = useMemo(() => 
-    selectedManholeId ? stableRealTimeDataMap.current.get(selectedManholeId) : undefined, 
-    [selectedManholeId, stableRealTimeDataMap]);
-  
   // 刷新数据 - 修复函数调用
   const refreshData = useCallback(() => {
     setLoading(true);
@@ -580,18 +535,6 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
       device.location.district.includes(selectedAreaFilter)
     ));
   }, [manholes, selectedAreaFilter]);
-
-  // 优化设备状态面板渲染函数
-  const renderOptimizedDeviceStatus = useCallback(() => {
-    return displayedDevices.map(device => (
-      <DeviceStatusPanel 
-        key={device.id}
-        device={device}
-        realTimeData={stableRealTimeDataMap.current.get(device.id) || {} as ManholeRealTimeData}
-        onSelectDevice={handleSelectDevice}
-      />
-    ));
-  }, [displayedDevices, stableRealTimeDataMap, handleSelectDevice]);
 
   // 保留原始的renderDeviceStatusPanel函数，但内部调用我们的优化版本
   const renderDeviceStatusPanel = useCallback((device: ManholeInfo) => {
@@ -676,39 +619,8 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
     
     // 保存初始刷新的数据
     lastRefreshedDataRef.current = new Map(realTimeDataMap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
-  // 获取设备状态颜色
-  const getStatusColor = (status: ManholeStatus): string => {
-    switch (status) {
-      case ManholeStatus.Normal:
-        return 'green';
-      case ManholeStatus.Warning:
-        return 'orange';
-      case ManholeStatus.Alarm:
-        return 'red';
-      case ManholeStatus.Offline:
-        return 'gray';
-      case ManholeStatus.Maintenance:
-        return 'blue';
-      default:
-        return '';
-    }
-  };
-  
-  // 获取井盖状态文本和颜色
-  const getCoverStatusInfo = (status: CoverStatus): { text: string, color: string } => {
-    switch (status) {
-      case CoverStatus.Closed:
-        return { text: '关闭', color: 'green' };
-      case CoverStatus.PartialOpen:
-        return { text: '部分开启', color: 'orange' };
-      case CoverStatus.Open:
-        return { text: '完全开启', color: 'red' };
-      default:
-        return { text: '未知', color: 'gray' };
-    }
-  };
   
   return (
     <ErrorBoundary fallback={

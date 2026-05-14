@@ -11,7 +11,6 @@ import {
 import { ManholeInfo } from '../../typings';
 import DailyReport from '../reports/DailyReport';
 
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
 interface ReportContainerProps {

@@ -1,7 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { Button, Card, Col, Row, Segmented, Space, Statistic, Tag } from 'antd';
-import { FullscreenExitOutlined, FullscreenOutlined } from '@ant-design/icons';
-import { ManholeInfo, ManholeRealTimeData, ManholeStatus } from '../../typings';
+import { Button, Card, Col, Row, Space, Statistic, Switch, Tag, Tooltip } from 'antd';
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  FullscreenExitOutlined,
+  FullscreenOutlined
+} from '@ant-design/icons';
+import {
+  ManholeInfo,
+  ManholeRealTimeData,
+  ManholeStatus,
+} from '../../typings';
 import HefeiManholeScene from './HefeiManholeScene';
 import { ErrorBoundary } from '../layout/ErrorBoundary';
 
@@ -37,110 +46,160 @@ const ManholeSceneWrapper: React.FC<ManholeSceneWrapperProps> = ({
   style = {}
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [sceneMode, setSceneMode] = useState<'night' | 'day'>('night');
+  const [isNightMode, setIsNightMode] = useState(true);
 
   const sceneStats = useMemo(() => {
     const total = manholes.length;
     const online = manholes.filter((item) => item.status !== ManholeStatus.Offline).length;
     const alarming = manholes.filter((item) => item.status === ManholeStatus.Alarm).length;
     const selected = manholes.find((item) => item.id === selectedManholeId) || null;
-    const averageBattery = Math.round(
-      manholes.reduce((sum, item) => sum + (realTimeDataMap.get(item.id)?.batteryLevel || item.latestData?.batteryLevel || 0), 0) / Math.max(total, 1)
-    );
 
-    return { total, online, alarming, selected, averageBattery };
-  }, [manholes, realTimeDataMap, selectedManholeId]);
+    return { total, online, alarming, selected };
+  }, [manholes, selectedManholeId]);
 
   return (
     <ErrorBoundary fallback={<div className="error-card">3D 场景加载失败</div>}>
-      <div className="scene-command-board" style={style}>
-        <div className="scene-command-header">
-          <div>
-            <div className="panel-eyebrow">Immersive Command View</div>
-            <h2>数字孪生总览舞台</h2>
-            <p>以空间剧场方式重构 3D 井盖网络，突出风险、能量流、巡航视角与资产密度。</p>
+      <Card
+        className="glass-card main-scene-card"
+        style={{
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.28)',
+          background: 'linear-gradient(180deg, rgba(7,24,43,0.96), rgba(4,16,31,0.94))',
+          ...style
+        }}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 18, fontWeight: 700 }}>合肥智慧井盖 3D 数字孪生</span>
+            <Tag color="blue">空间监控</Tag>
+            <Tag color={isNightMode ? 'cyan' : 'gold'}>{isNightMode ? '夜景模式' : '日景模式'}</Tag>
           </div>
-          <Space size={12} wrap>
-            <Segmented
-              value={sceneMode}
-              options={[
-                { label: '夜景巡航', value: 'night' },
-                { label: '日景展示', value: 'day' }
-              ]}
-              onChange={(value) => setSceneMode(value as 'night' | 'day')}
-            />
-            <Button
-              className="scene-expand-button"
-              icon={isExpanded ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-              onClick={() => setIsExpanded((previous) => !previous)}
-            >
-              {isExpanded ? '收起舞台' : '展开舞台'}
-            </Button>
+        }
+        extra={
+          <Space size="middle">
+            <Tooltip title={isNightMode ? '切换为日景' : '切换为夜景'}>
+              <Switch
+                checkedChildren={<EyeInvisibleOutlined />}
+                unCheckedChildren={<EyeOutlined />}
+                checked={isNightMode}
+                onChange={setIsNightMode}
+              />
+            </Tooltip>
+            <Tooltip title={isExpanded ? '退出大场景' : '展开大场景'}>
+              <Button
+                type="text"
+                icon={isExpanded ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                onClick={() => setIsExpanded((previous) => !previous)}
+              />
+            </Tooltip>
           </Space>
-        </div>
-
-        <Row gutter={[16, 16]} className="scene-kpi-row">
-          <Col xs={24} sm={12} xl={6}>
-            <Card className="premium-panel metric-card" bordered={false}>
-              <Statistic title="空间节点" value={sceneStats.total} valueStyle={{ color: '#f8fafc' }} />
+        }
+        bodyStyle={{
+          padding: 18
+        }}
+      >
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          <Col span={6}>
+            <Card size="small" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <Statistic title="井盖总量" value={sceneStats.total} valueStyle={{ color: '#e6f4ff' }} />
             </Card>
           </Col>
-          <Col xs={24} sm={12} xl={6}>
-            <Card className="premium-panel metric-card" bordered={false}>
-              <Statistic title="在线设备" value={sceneStats.online} valueStyle={{ color: '#2dd4bf' }} />
+          <Col span={6}>
+            <Card size="small" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <Statistic title="在线设备" value={sceneStats.online} valueStyle={{ color: '#52c41a' }} />
             </Card>
           </Col>
-          <Col xs={24} sm={12} xl={6}>
-            <Card className="premium-panel metric-card" bordered={false}>
-              <Statistic title="告警目标" value={sceneStats.alarming} valueStyle={{ color: '#fb7185' }} />
+          <Col span={6}>
+            <Card size="small" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <Statistic title="当前报警" value={sceneStats.alarming} valueStyle={{ color: '#f5222d' }} />
             </Card>
           </Col>
-          <Col xs={24} sm={12} xl={6}>
-            <Card className="premium-panel metric-card" bordered={false}>
-              <Statistic title="平均电量" value={sceneStats.averageBattery} suffix="%" valueStyle={{ color: '#60a5fa' }} />
+          <Col span={6}>
+            <Card size="small" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>当前焦点</div>
+              {sceneStats.selected ? (
+                <>
+                  <div style={{ color: '#fff', fontWeight: 600 }}>{sceneStats.selected.name}</div>
+                  <Tag color={statusColors[sceneStats.selected.status]} style={{ marginTop: 8 }}>
+                    {statusLabels[sceneStats.selected.status]}
+                  </Tag>
+                </>
+              ) : (
+                <div style={{ color: 'rgba(255,255,255,0.75)' }}>未选中井盖</div>
+              )}
             </Card>
           </Col>
         </Row>
 
-        <div className={`scene-stage-wrapper ${isExpanded ? 'expanded' : ''}`}>
-          <HefeiManholeScene
-            manholes={manholes}
-            realTimeDataMap={realTimeDataMap}
-            onSelectManhole={onSelectManhole}
-            selectedManholeId={selectedManholeId}
-            isNightMode={sceneMode === 'night'}
+        <div
+          style={{
+            position: 'relative',
+            height: isExpanded ? 'calc(100vh - 250px)' : 620,
+            borderRadius: 20,
+            overflow: 'hidden',
+            background: 'radial-gradient(circle at top, rgba(34,94,168,0.28), rgba(2,11,23,0.96) 58%)',
+            border: '1px solid rgba(255,255,255,0.08)'
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0) 24%, rgba(0,0,0,0.2))',
+              zIndex: 1
+            }}
           />
-        </div>
-
-        <div className="scene-lower-grid">
-          <Card className="premium-panel" bordered={false}>
-            <div className="panel-eyebrow">Active Focus</div>
-            {sceneStats.selected ? (
-              <>
-                <div className="selected-asset-title">{sceneStats.selected.name}</div>
-                <Tag color={statusColors[sceneStats.selected.status]}>{statusLabels[sceneStats.selected.status]}</Tag>
-                <p className="scene-summary-copy">
-                  已将当前井盖提升为 3D 场景焦点，选中节点会增强光束、标签和环形信号反馈。
-                </p>
-              </>
-            ) : (
-              <p className="scene-summary-copy">点击任意井盖节点后，右侧指标与底部数据条会联动到该资产。</p>
-            )}
-          </Card>
-          <Card className="premium-panel" bordered={false}>
-            <div className="panel-eyebrow">Scene Layers</div>
-            <div className="scene-pill-group compact">
-              <span>城市基底</span>
-              <span>建筑阵列</span>
-              <span>能量束流</span>
-              <span>星域粒子</span>
+          <div
+            style={{
+              position: 'absolute',
+              top: 18,
+              left: 18,
+              zIndex: 2,
+              padding: '10px 14px',
+              borderRadius: 14,
+              background: 'rgba(2, 10, 23, 0.68)',
+              color: '#d6e4ff',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>空间态势</div>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>
+              展示井盖、地标、预测状态与数据流，支持 hover 与选中联动。
             </div>
-            <p className="scene-summary-copy">
-              新场景不再是平面地块叠几何体，而是改成可展示节点密度、风险等级和运行状态的指挥舞台。
-            </p>
-          </Card>
+          </div>
+
+          <div
+            style={{
+              position: 'absolute',
+              right: 18,
+              top: 18,
+              zIndex: 2,
+              padding: '10px 14px',
+              borderRadius: 14,
+              background: 'rgba(2, 10, 23, 0.68)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            <Space wrap>
+              <Tag color="cyan">轨道相机</Tag>
+              <Tag color="geekblue">地标映射</Tag>
+              <Tag color="purple">预测面板</Tag>
+            </Space>
+          </div>
+
+          <div className="scene-container-wrapper" style={{ height: '100%', width: '100%' }}>
+            <HefeiManholeScene
+              manholes={manholes}
+              realTimeDataMap={realTimeDataMap}
+              onSelectManhole={onSelectManhole}
+              selectedManholeId={selectedManholeId}
+              isNightMode={isNightMode}
+            />
+          </div>
         </div>
-      </div>
+      </Card>
     </ErrorBoundary>
   );
 };

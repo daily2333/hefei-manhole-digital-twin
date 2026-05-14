@@ -2,44 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   Form, 
-  Input, 
   Button, 
   DatePicker, 
   Select, 
   Table, 
   Tag, 
   Space, 
-  Divider,
   Row,
   Col,
   Tabs,
-  Tooltip,
   Badge,
   message,
-  Upload,
-  Statistic,
   Typography,
   Breadcrumb
 } from 'antd';
 import { 
   SearchOutlined, 
-  DownloadOutlined, 
   HistoryOutlined, 
   ReloadOutlined,
-  FilterOutlined,
   SaveOutlined,
   FileExcelOutlined,
   FilePdfOutlined,
   DeleteOutlined,
-  ExportOutlined
 } from '@ant-design/icons';
-import type { RangePickerProps } from 'antd/es/date-picker';
 import dayjs from 'dayjs';
 import { ManholeInfo, ManholeStatus, ManholeRealTimeData, CoverStatus } from '../../typings';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { TabPane } = Tabs;
 const { Title, Text } = Typography;
 
 // 模拟数据查询API响应
@@ -418,9 +408,11 @@ const DataSearch: React.FC<DataSearchProps> = ({ manholes = [], realTimeDataMap 
             </Button>
           </Space>
         }
-      >
-        <TabPane tab="实时数据查询" key="realTime">
-          <Card style={{ marginBottom: '16px' }}>
+        items={[
+          {
+            label: '实时数据查询',
+            key: 'realTime',
+            children: <Card style={{ marginBottom: '16px' }}>
             <Form 
               form={form}
               layout="vertical" 
@@ -539,10 +531,11 @@ const DataSearch: React.FC<DataSearchProps> = ({ manholes = [], realTimeDataMap 
               </Row>
             </Form>
           </Card>
-        </TabPane>
-        
-        <TabPane tab="历史数据查询" key="history">
-          <Card style={{ marginBottom: '16px' }}>
+          },
+          {
+            label: '历史数据查询',
+            key: 'history',
+            children: <Card style={{ marginBottom: '16px' }}>
             <Form 
               form={historyForm}
               layout="vertical" 
@@ -628,19 +621,15 @@ const DataSearch: React.FC<DataSearchProps> = ({ manholes = [], realTimeDataMap 
               </Row>
             </Form>
           </Card>
-        </TabPane>
-        
-        <TabPane 
-          tab={
-            <span>
+          },
+          {
+            label: <span>
               <HistoryOutlined />
               搜索历史
               <Badge count={searchHistory.length} offset={[5, -5]} size="small" />
-            </span>
-          } 
-          key="searchHistory"
-        >
-          <Card>
+            </span>,
+            key: 'searchHistory',
+            children: <Card>
             <Table
               dataSource={searchHistory}
               rowKey="id"
@@ -678,19 +667,15 @@ const DataSearch: React.FC<DataSearchProps> = ({ manholes = [], realTimeDataMap 
               pagination={{ pageSize: 5 }}
             />
           </Card>
-        </TabPane>
-        
-        <TabPane 
-          tab={
-            <span>
+          },
+          {
+            label: <span>
               <SaveOutlined />
               已保存查询
               <Badge count={savedSearches.length} offset={[5, -5]} size="small" />
-            </span>
-          } 
-          key="savedSearches"
-        >
-          <Card>
+            </span>,
+            key: 'savedSearches',
+            children: <Card>
             <Table
               dataSource={savedSearches}
               rowKey="id"
@@ -735,8 +720,9 @@ const DataSearch: React.FC<DataSearchProps> = ({ manholes = [], realTimeDataMap 
               pagination={{ pageSize: 5 }}
             />
           </Card>
-        </TabPane>
-      </Tabs>
+          },
+        ]}
+      />
       
       <Card title="查询结果" extra={<Text type="secondary">共 {results.length} 条记录</Text>}>
         <Table

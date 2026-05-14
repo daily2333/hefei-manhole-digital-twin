@@ -27,7 +27,6 @@ import dayjs from 'dayjs';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { TabPane } = Tabs;
 
 interface PredictionAnalyticsProps { 
   manholes?: ManholeInfo[]; 
@@ -248,24 +247,13 @@ const PredictionAnalytics: React.FC<PredictionAnalyticsProps> = ({
             activeKey={predictionType} 
             onChange={handlePredictionTypeChange}
             type="card"
-          >
-            <TabPane 
-              tab={<span><LineChartOutlined /> 趋势预测</span>} 
-              key={PredictionType.TREND}
-            />
-            <TabPane 
-              tab={<span><ThunderboltOutlined /> 异常检测</span>} 
-              key={PredictionType.ANOMALY}
-            />
-            <TabPane 
-              tab={<span><AreaChartOutlined /> 未来预测</span>} 
-              key={PredictionType.FORECAST}
-            />
-            <TabPane 
-              tab={<span><BarChartOutlined /> 风险预测</span>} 
-              key={PredictionType.RISK}
-            />
-          </Tabs>
+            items={[
+              { label: <span><LineChartOutlined /> 趋势预测</span>, key: PredictionType.TREND, children: null },
+              { label: <span><ThunderboltOutlined /> 异常检测</span>, key: PredictionType.ANOMALY, children: null },
+              { label: <span><AreaChartOutlined /> 未来预测</span>, key: PredictionType.FORECAST, children: null },
+              { label: <span><BarChartOutlined /> 风险预测</span>, key: PredictionType.RISK, children: null }
+            ]}
+          />
           
           {renderContent()}
         </Col>
