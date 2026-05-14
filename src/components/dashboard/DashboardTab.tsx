@@ -64,49 +64,45 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
   const statistics = useMemo(() => {
     const totalDevices = manholes.length;
     const onlineDevices = manholes.filter(m => m.status !== ManholeStatus.Offline).length;
-    const totalAlarms = alarms.filter(a => !a.isResolved).length;
-    
-    const emergencyAlarms = alarms.filter(a => !a.isResolved && a.level === AlarmLevel.Emergency).length;
-    const alertAlarms = alarms.filter(a => !a.isResolved && a.level === AlarmLevel.Alert).length;
-    const warningAlarms = alarms.filter(a => !a.isResolved && a.level === AlarmLevel.Warning).length;
-    const noticeAlarms = alarms.filter(a => !a.isResolved && a.level === AlarmLevel.Notice).length;
-    const infoAlarms = alarms.filter(a => !a.isResolved && a.level === AlarmLevel.Info).length;
-    
-    const onlinePercent = Math.round((onlineDevices / totalDevices) * 100);
-    
-    // 计算各种状态的井盖数量
-    const normalCount = manholes.filter(m => m.status === ManholeStatus.Normal).length;
-    const warningCount = manholes.filter(m => m.status === ManholeStatus.Warning).length;
-    const alarmCount = manholes.filter(m => m.status === ManholeStatus.Alarm).length;
-    const maintenanceCount = manholes.filter(m => m.status === ManholeStatus.Maintenance).length;
-    const offlineCount = manholes.filter(m => m.status === ManholeStatus.Offline).length;
-    
+
+    let totalAlarms = 0, emergencyAlarms = 0, alertAlarms = 0, warningAlarms = 0, noticeAlarms = 0, infoAlarms = 0;
+    for (const a of alarms) {
+      if (a.isResolved) continue;
+      totalAlarms++;
+      if (a.level === AlarmLevel.Emergency) emergencyAlarms++;
+      else if (a.level === AlarmLevel.Alert) alertAlarms++;
+      else if (a.level === AlarmLevel.Warning) warningAlarms++;
+      else if (a.level === AlarmLevel.Notice) noticeAlarms++;
+      else if (a.level === AlarmLevel.Info) infoAlarms++;
+    }
+
+    const onlinePercent = totalDevices > 0 ? Math.round((onlineDevices / totalDevices) * 100) : 0;
+
+    let normalCount = 0, warningCount = 0, alarmCount = 0, maintenanceCount = 0, offlineCount = 0;
+    for (const m of manholes) {
+      if (m.status === ManholeStatus.Normal) normalCount++;
+      else if (m.status === ManholeStatus.Warning) warningCount++;
+      else if (m.status === ManholeStatus.Alarm) alarmCount++;
+      else if (m.status === ManholeStatus.Maintenance) maintenanceCount++;
+      else if (m.status === ManholeStatus.Offline) offlineCount++;
+    }
+
     return {
-      totalDevices,
-      onlineDevices,
-      totalAlarms,
-      emergencyAlarms,
-      alertAlarms,
-      warningAlarms,
-      noticeAlarms,
-      infoAlarms,
-      onlinePercent,
-      normalCount,
-      warningCount,
-      alarmCount,
-      maintenanceCount,
-      offlineCount
+      totalDevices, onlineDevices, totalAlarms,
+      emergencyAlarms, alertAlarms, warningAlarms, noticeAlarms, infoAlarms,
+      onlinePercent, normalCount, warningCount, alarmCount, maintenanceCount, offlineCount
     };
   }, [manholes, alarms]);
 
   // 计算平均值
-  const avgWaterLevel = useMemo(() => {
-    const values = Array.from(realTimeDataMap.values()).map(d => d.waterLevel).filter(v => v != null);
-    return values.length > 0 ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : 0;
-  }, [realTimeDataMap]);
-  const avgGasLevel = useMemo(() => {
-    const values = Array.from(realTimeDataMap.values()).map(d => d.gasConcentration?.ch4 ?? 0).filter(v => v != null);
-    return values.length > 0 ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : 0;
+  const { avgWaterLevel, avgGasLevel } = useMemo(() => {
+    const values = Array.from(realTimeDataMap.values());
+    const waterValues = values.map(d => d.waterLevel).filter(v => v != null);
+    const gasValues = values.map(d => d.gasConcentration?.ch4 ?? 0).filter(v => v != null);
+    return {
+      avgWaterLevel: waterValues.length > 0 ? Math.round((waterValues.reduce((a, b) => a + b, 0) / waterValues.length) * 10) / 10 : 0,
+      avgGasLevel: gasValues.length > 0 ? Math.round((gasValues.reduce((a, b) => a + b, 0) / gasValues.length) * 10) / 10 : 0,
+    };
   }, [realTimeDataMap]);
 
   // 获取异常井盖

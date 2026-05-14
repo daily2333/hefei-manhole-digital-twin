@@ -143,19 +143,19 @@ export const useMultiRealTimeData = (manholeIds: string[], interval = DEFAULT_IN
       prevIdsRef.current.some((id) => !stableIds.includes(id));
 
     if (idsChanged) {
-      const initial = new Map(stableRef.current);
       const batchSize = 3;
       for (let i = 0; i < stableIds.length; i += batchSize) {
         const batch = stableIds.slice(i, i + batchSize);
         setTimeout(async () => {
           if (!mountedRef.current) return;
-          const next = new Map(initial);
           for (const id of batch) {
             const d = await fetchOne(id);
-            if (d) { next.set(id, d); lastRef.current[id] = JSON.stringify(d); }
+            if (d) {
+              stableRef.current.set(id, d);
+              lastRef.current[id] = JSON.stringify(d);
+            }
           }
-          stableRef.current = next;
-          setMap(next);
+          if (mountedRef.current) setMap(new Map(stableRef.current));
         }, (i / batchSize) * 100);
       }
       prevIdsRef.current = [...stableIds];

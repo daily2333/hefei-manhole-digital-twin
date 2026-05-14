@@ -59,6 +59,7 @@ const App: React.FC = () => {
   const [performanceScore, setPerformanceScore] = useState(100);
   const performanceRef = useRef({ lastCheck: Date.now(), frameCount: 0, fps: 60, memoryUsage: 0 });
   const frameRequestRef = useRef<number | null>(null);
+  const manholesRef = useRef<ManholeInfo[]>([]);
 
   const handleSelectManhole = useCallback((manhole: ManholeInfo) => {
     setSelectedManhole(manhole);
@@ -69,6 +70,7 @@ const App: React.FC = () => {
       setLoading(true);
       const payload = await loadBootstrapData();
       setManholes(payload.manholes);
+      manholesRef.current = payload.manholes;
       setRealTimeDataMap(payload.realTimeDataMap);
       setAlarms(payload.alarms);
       setNotifications(payload.alarms.filter((a: ManholeAlarm) => !a.isResolved).length);
@@ -80,12 +82,13 @@ const App: React.FC = () => {
   }, []);
 
   const refreshRealTimeData = useCallback(async () => {
-    if (manholes.length === 0) return;
+    const currentManholes = manholesRef.current;
+    if (currentManholes.length === 0) return;
     const batchSize = 5;
-    const batchIndex = Math.floor(Date.now() / REALTIME_REFRESH_INTERVAL) % Math.max(1, Math.ceil(manholes.length / batchSize));
+    const batchIndex = Math.floor(Date.now() / REALTIME_REFRESH_INTERVAL) % Math.max(1, Math.ceil(currentManholes.length / batchSize));
     const start = batchIndex * batchSize;
-    const end = Math.min(start + batchSize, manholes.length);
-    const batch = manholes.slice(start, end);
+    const end = Math.min(start + batchSize, currentManholes.length);
+    const batch = currentManholes.slice(start, end);
 
     const updates = await Promise.allSettled(
       batch.map((m) => fetchRealtimeByManhole(m.id).then((data) => ({ id: m.id, data })))
@@ -102,7 +105,7 @@ const App: React.FC = () => {
       }
       return changed ? next : prev;
     });
-  }, [manholes]);
+  }, []);
 
   const refreshAlarms = useCallback(async () => {
     try {
@@ -238,7 +241,7 @@ const App: React.FC = () => {
             {manhole.healthScore.trend === 'rising' ? '上升' : manhole.healthScore.trend === 'falling' ? '下降' : '稳定'}
           </Tag>
           <span style={{ marginLeft: '8px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.45)' }}>
-            最后更新 {formatDateTime(new Date(manhole.healthScore.lastUpdated))}
+            最后更新 {manhole.healthScore.lastUpdated ? formatDateTime(new Date(manhole.healthScore.lastUpdated)) : '--'}
           </span>
         </div>
       </Card>

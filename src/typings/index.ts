@@ -165,8 +165,8 @@ export interface Location {
   longitude: number;
   address: string;
   district: string;
-  city: string;
-  province: string;
+  city?: string;
+  province?: string;
 }
 
 /**
@@ -178,9 +178,9 @@ export interface HealthScore {
   sensorScore: number;
   batteryScore: number;
   communicationScore: number;
-  lastUpdated: string;
-  trend: 'rising' | 'falling' | 'stable';
-  history: HealthScoreRecord[];
+  lastUpdated?: string;
+  trend?: 'rising' | 'falling' | 'stable';
+  history?: HealthScoreRecord[];
 }
 
 /**

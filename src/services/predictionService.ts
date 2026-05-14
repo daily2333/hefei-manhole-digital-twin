@@ -13,7 +13,9 @@ function simpleLinearRegression(data: number[]): { slope: number; intercept: num
   for (let i = 0; i < n; i++) {
     sumX += i; sumY += data[i]; sumXY += i * data[i]; sumX2 += i * i;
   }
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const denom = n * sumX2 - sumX * sumX;
+  if (denom === 0) return { slope: 0, intercept: sumY / n };
+  const slope = (n * sumXY - sumX * sumY) / denom;
   const intercept = (sumY - slope * sumX) / n;
   return { slope, intercept };
 }
@@ -45,6 +47,7 @@ export class PredictionService {
       timestamp: d.timestamp,
       value: extractMetric(d, dataType)
     }));
+    if (historicalData.length === 0) return [];
     const values = historicalData.map((item) => item.value);
     const predictions = predictFutureValues(values, 24);
     const result = historicalData.map((item) => ({ ...item, isActual: true }));
@@ -64,6 +67,7 @@ export class PredictionService {
     riskLevel: 'low' | 'medium' | 'high';
   }> {
     const historyData = await fetchRealtimeHistory(manholeId, 100);
+    if (historyData.length === 0) return { anomalies: [], riskLevel: 'low' };
     const historicalData: HistoricalDataPoint[] = historyData.map(d => ({
       timestamp: d.timestamp,
       value: extractMetric(d, dataType)
@@ -74,7 +78,7 @@ export class PredictionService {
     const anomalies = historicalData
       .filter((d) => Math.abs((d.value - mean) / std) > 2)
       .map((d) => ({ timestamp: d.timestamp, value: Math.round(d.value * 100) / 100, zScore: Math.round(Math.abs((d.value - mean) / std) * 100) / 100 }));
-    const maxZ = Math.max(...anomalies.map((a) => a.zScore), 0);
+    const maxZ = anomalies.length > 0 ? Math.max(...anomalies.map((a) => a.zScore)) : 0;
     const riskLevel: 'low' | 'medium' | 'high' = maxZ > 3.5 ? 'high' : maxZ > 2.5 ? 'medium' : 'low';
     return { anomalies, riskLevel };
   }

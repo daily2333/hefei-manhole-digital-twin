@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Card, 
   Table, 
@@ -40,7 +40,7 @@ import {
 import dayjs from 'dayjs';
 import { ManholeInfo, ManholeStatus, ManholeRealTimeData } from '../../typings';
 import { formatDateTime, generateUniqueId } from '../../utils';
-import { fetchManholes, fetchRealtimeByManhole } from '../../services/api';
+import { fetchManholes, fetchRealtimeByManhole, createManhole, updateManhole, deleteManhole } from '../../services/api';
 
 // 获取设备状态对应的颜色
 const getDeviceStatusColor = (status: ManholeStatus): string => {
@@ -141,13 +141,10 @@ const DeviceManagement: React.FC = () => {
   }, [devices]);
   
   // 过滤设备列表
-  const filteredDevices = devices.filter(device => {
-    // 状态过滤
+  const filteredDevices = useMemo(() => devices.filter(device => {
     if (statusFilter && device.status !== statusFilter) {
       return false;
     }
-    
-    // 搜索文本过滤
     if (searchText) {
       const searchLower = searchText.toLowerCase();
       return (
@@ -158,19 +155,18 @@ const DeviceManagement: React.FC = () => {
         device.manufacturer.toLowerCase().includes(searchLower)
       );
     }
-    
     return true;
-  });
-  
+  }), [devices, statusFilter, searchText]);
+
   // 设备状态统计
-  const deviceStats = {
+  const deviceStats = useMemo(() => ({
     total: devices.length,
     normal: devices.filter(d => d.status === ManholeStatus.Normal).length,
     warning: devices.filter(d => d.status === ManholeStatus.Warning).length,
     alarm: devices.filter(d => d.status === ManholeStatus.Alarm).length,
     offline: devices.filter(d => d.status === ManholeStatus.Offline).length,
     maintenance: devices.filter(d => d.status === ManholeStatus.Maintenance).length
-  };
+  }), [devices]);
   
   // 显示添加设备模态框
   const showAddModal = () => {
@@ -200,58 +196,50 @@ const DeviceManagement: React.FC = () => {
   };
   
   // 提交表单
-  const handleSubmit = () => {
-    form.validateFields().then(values => {
-      // 转换日期对象为字符串
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
       const formattedValues = {
         ...values,
-        installationDate: values.installationDate?.toISOString(),
-        batteryReplaceDate: values.batteryReplaceDate?.toISOString()
+        installation_date: values.installationDate?.toISOString(),
+        contact_phone: values.contactPhone,
+        sensor_types: values.sensorTypes,
       };
-      
+      delete formattedValues.installationDate;
+      delete formattedValues.batteryReplaceDate;
+      delete formattedValues.contactPhone;
+      delete formattedValues.sensorTypes;
+
       if (editingDevice) {
-        // 更新设备
-        const updatedDevices = devices.map(device => 
-          device.id === editingDevice.id ? { ...device, ...formattedValues } : device
-        );
-        setDevices(updatedDevices);
+        const updated = await updateManhole(editingDevice.id, formattedValues);
+        setDevices(devices.map(d => d.id === editingDevice.id ? updated : d));
         message.success('设备信息已更新');
       } else {
-        // 添加新设备
-        const newDevice: ManholeInfo = {
-          id: `device-${generateUniqueId()}`,
-          ...formattedValues,
-          status: ManholeStatus.Normal,
-          deviceId: `sensor-${generateUniqueId()}`,
-          sensorTypes: ['水位', '气体', '温湿度'],
-        };
-        setDevices([...devices, newDevice]);
+        const created = await createManhole(formattedValues);
+        setDevices([created, ...devices]);
         message.success('设备已添加');
-        
-        // 为新设备获取实时数据
-        fetchRealtimeByManhole(newDevice.id).then(realTimeData => {
-          setRealTimeDataMap(prev => {
-            const newMap = new Map(prev);
-            newMap.set(newDevice.id, realTimeData);
-            return newMap;
-          });
-        }).catch(() => {});
       }
-      
       setIsModalVisible(false);
-    });
+    } catch (error: any) {
+      if (error.errorFields) return; // form validation error
+      console.error('提交设备信息失败:', error);
+      message.error('操作失败，请重试');
+    }
   };
   
   // 删除设备
-  const handleDelete = (deviceId: string) => {
-    setDevices(devices.filter(device => device.id !== deviceId));
-    
-    // 同时删除对应的实时数据
-    const newDataMap = new Map(realTimeDataMap);
-    newDataMap.delete(deviceId);
-    setRealTimeDataMap(newDataMap);
-    
-    message.success('设备已删除');
+  const handleDelete = async (deviceId: string) => {
+    try {
+      await deleteManhole(deviceId);
+      setDevices(devices.filter(device => device.id !== deviceId));
+      const newDataMap = new Map(realTimeDataMap);
+      newDataMap.delete(deviceId);
+      setRealTimeDataMap(newDataMap);
+      message.success('设备已删除');
+    } catch (error) {
+      console.error('删除设备失败:', error);
+      message.error('删除失败，请重试');
+    }
   };
   
   // 远程重启设备
@@ -375,7 +363,7 @@ const DeviceManagement: React.FC = () => {
         <div>
           <div>{location.address}</div>
           <div style={{ fontSize: '12px', color: '#999' }}>
-            {location.district}, {location.city}
+            {location.district}{location.city ? `, ${location.city}` : ''}
           </div>
         </div>
       ),
@@ -725,7 +713,7 @@ const DeviceManagement: React.FC = () => {
             <Card size="small">
               <p><EnvironmentOutlined /> {device.location.address}</p>
               <p>
-                {device.location.district}, {device.location.city}, {device.location.province}
+                {device.location.district}{device.location.city ? `, ${device.location.city}` : ''}{device.location.province ? `, ${device.location.province}` : ''}
               </p>
               <p>
                 坐标: {device.location.latitude.toFixed(6)}, {device.location.longitude.toFixed(6)}

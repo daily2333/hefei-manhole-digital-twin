@@ -7,10 +7,10 @@ const MQTT_TOPIC = process.env.MQTT_TOPIC || 'manhole/+/data';
 let client = null;
 
 function setupMqttClient(io) {
-  // For now, log that MQTT is disabled until a broker is available
-  console.log(`[mqtt] disabled — set MQTT_BROKER env to enable (e.g. ${MQTT_BROKER})`);
-
-  if (!process.env.MQTT_BROKER) return;
+  if (!process.env.MQTT_BROKER) {
+    console.log(`[mqtt] disabled — set MQTT_BROKER env to enable (e.g. ${MQTT_BROKER})`);
+    return;
+  }
 
   client = mqtt.connect(MQTT_BROKER);
 

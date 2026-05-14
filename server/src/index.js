@@ -18,7 +18,7 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/manholes', manholesRouter);
 app.use('/api/realtime', realtimeRouter);
@@ -31,6 +31,11 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use((err, _req, res, _next) => {
+  console.error('[server] unhandled error:', err);
+  res.status(500).json({ error: '服务器内部错误' });
+});
+
 setupMqttClient(io);
 
 const PORT = process.env.PORT || 4000;
@@ -38,3 +43,14 @@ server.listen(PORT, () => {
   console.log(`[server] running on http://localhost:${PORT}`);
   console.log(`[server] WebSocket ready`);
 });
+
+function shutdown() {
+  console.log('[server] shutting down...');
+  server.close(() => {
+    console.log('[server] closed');
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 5000);
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

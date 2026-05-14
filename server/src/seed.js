@@ -1,5 +1,6 @@
 const { getDb } = require('./db');
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcryptjs');
 
 const db = getDb();
 
@@ -8,7 +9,6 @@ for (const t of ['real_time_data', 'alarms', 'maintenance_records', 'health_scor
   db.prepare(`DELETE FROM ${t}`).run();
 }
 
-// ----- REALISTIC DATA GENERATORS -----
 const DISTRICTS = ['蜀山区', '庐阳区', '包河区', '瑶海区', '新站区', '经开区', '高新区', '滨湖区'];
 const ROADS = ['长江路', '黄山路', '合作化路', '徽州大道', '望江路', '科学大道', '繁华大道', '习友路', '南宁路', '金寨路', '宿松路', '方兴大道', '锦绣大道', '紫云路', '云谷路'];
 const MODELS = ['MH-2000', 'MH-3000 Pro', 'MH-1000', 'MH-5000S', 'MH-Elite'];
@@ -22,7 +22,6 @@ function randf(min, max, d = 2) { return parseFloat((Math.random() * (max - min)
 function pick(arr) { return arr[rand(0, arr.length - 1)]; }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-// 合肥市中心：117.27, 31.86
 function generateHefeiLocation() {
   const districts = {
     '蜀山区': { lat: [31.82, 31.88], lng: [117.20, 117.28] },
@@ -61,7 +60,7 @@ function generateStatusByAge(monthsSinceInstall) {
   return pick(['normal', 'normal', 'normal', 'normal', 'warning']);
 }
 
-// ----- SEED MANHOLES (50 devices for realism) -----
+// ----- MANHOLES -----
 console.log('[seed] inserting 50 manholes...');
 const manholeIds = [];
 const insertManhole = db.prepare(`
@@ -81,22 +80,14 @@ const insertManholeTrx = db.transaction(() => {
     const lastMaint = new Date(Date.now() - rand(10, 180) * 86400000);
     const nextMaint = new Date(lastMaint.getTime() + rand(90, 270) * 86400000);
     const status = generateStatusByAge(monthsAgo);
-
     manholeData.push({ id, status, sensorTypes, monthsAgo });
-
     insertManhole.run(
-      id,
-      `${loc.district}${loc.address.split(loc.district)[1] || loc.address}井`,
-      `MH-${String(i + 1).padStart(4, '0')}`,
-      status,
-      loc.latitude, loc.longitude,
-      loc.address, loc.district,
+      id, `${loc.district}${loc.address.split(loc.district)[1] || loc.address}井`,
+      `MH-${String(i + 1).padStart(4, '0')}`, status,
+      loc.latitude, loc.longitude, loc.address, loc.district,
       pick(MODELS), pick(MANUFACTURERS), pick(MATERIALS),
-      installDate.toISOString(),
-      lastMaint.toISOString(),
-      nextMaint.toISOString(),
-      randf(0.6, 1.0), randf(0.5, 2.0),
-      pick(MANAGERS), pick(PHONES),
+      installDate.toISOString(), lastMaint.toISOString(), nextMaint.toISOString(),
+      randf(0.6, 1.0), randf(0.5, 2.0), pick(MANAGERS), pick(PHONES),
       JSON.stringify(sensorTypes)
     );
   }
@@ -104,7 +95,7 @@ const insertManholeTrx = db.transaction(() => {
 insertManholeTrx();
 console.log(`[seed] ${manholeIds.length} manholes inserted`);
 
-// ----- REALISTIC REALTIME DATA (72 hours) -----
+// ----- REALTIME DATA (72 hours) -----
 console.log('[seed] inserting 72h of realtime data...');
 const insertRT = db.prepare(`
   INSERT INTO real_time_data (manhole_id, water_level, ch4, co, h2s, o2, temperature, humidity, battery_level, signal_strength, cover_status, tilt_x, tilt_y, tilt_z, recorded_at)
@@ -113,57 +104,39 @@ const insertRT = db.prepare(`
 
 const insertRTTrx = db.transaction(() => {
   for (const mid of manholeIds) {
-    // Base parameters vary per manhole
     const baseTemp = randf(18, 32);
     const baseHum = randf(45, 80);
     const baseWater = randf(2, 25);
     const hasHighWater = Math.random() < 0.15;
     const hasGasLeak = Math.random() < 0.08;
     const isRaining = Math.random() < 0.3;
-
     for (let h = 0; h < 72; h++) {
       const absHour = h % 24;
       const dayFactor = Math.sin((absHour - 5) * Math.PI / 12);
       const rainEffect = isRaining ? randf(1, 8) : 0;
-
-      // Temperature: follows daily cycle
       const temp = clamp(baseTemp + dayFactor * 7 + randf(-1.5, 1.5), -2, 55);
-
-      // Humidity: inversely related to temperature
       const hum = clamp(baseHum - dayFactor * 15 + randf(-4, 4), 10, 100);
-
-      // Water level: higher when raining, spikes randomly
       const waterSpike = hasHighWater && Math.random() < 0.05 ? randf(20, 80) : 0;
       const water = clamp(baseWater + rainEffect + randf(-2, 2) + waterSpike, 0, 200);
-
-      // Gas: occasional leak simulation
       const gasLeak = hasGasLeak && Math.random() < 0.01 ? randf(20, 80) : 0;
       const ch4 = clamp(randf(0, 5) + gasLeak, 0, 500);
       const co = clamp(randf(0, 2) + gasLeak * 0.3, 0, 100);
       const h2s = clamp(randf(0, 0.5) + gasLeak * 0.1, 0, 50);
       const o2 = clamp(20.9 - gasLeak * 0.02 + randf(-0.2, 0.2), 15, 25);
-
-      // Battery: slowly drains over 72h
       const batteryDrain = h * 0.08;
       const battery = clamp(randf(60, 100) - batteryDrain + randf(-2, 2), 0, 100);
-
-      // Signal
       const signal = clamp(randf(-75, -45) + randf(-5, 5), -120, -30);
-
       const coverStatus = Math.random() < 0.95 ? 'closed' : (Math.random() < 0.5 ? 'open' : 'half_open');
       const tilt = coverStatus !== 'closed' ? randf(1, 15) : randf(-2, 2);
-
-      insertRT.run(
-        mid, water, ch4, co, h2s, o2, temp, hum, battery, signal, coverStatus,
+      insertRT.run(mid, water, ch4, co, h2s, o2, temp, hum, battery, signal, coverStatus,
         randf(-2, 2), randf(-2, 2), tilt,
-        new Date(Date.now() - (71 - h) * 3600000).toISOString()
-      );
+        new Date(Date.now() - (71 - h) * 3600000).toISOString());
     }
   }
 });
 insertRTTrx();
 
-// ----- REALISTIC ALARMS -----
+// ----- ALARMS -----
 console.log('[seed] inserting alarms...');
 const insertAlarm = db.prepare(`
   INSERT INTO alarms (id, manhole_id, type, level, message, is_resolved, actual_value, normal_range_min, normal_range_max, created_at)
@@ -210,11 +183,8 @@ const alarmTrx = db.transaction(() => {
           msg = '井盖异常开启';
           break;
       }
-      insertAlarm.run(
-        uuidv4(), mid, type, level, msg, isResolved,
-        value, min, max,
-        new Date(Date.now() - rand(0, 14) * 86400000).toISOString()
-      );
+      insertAlarm.run(uuidv4(), mid, type, level, msg, isResolved, value, min, max,
+        new Date(Date.now() - rand(0, 14) * 86400000).toISOString());
     }
   }
 });
@@ -241,11 +211,8 @@ const maintTrx = db.transaction(() => {
       const daysAgo = rand(1, 120);
       const createdAt = new Date(Date.now() - daysAgo * 86400000).toISOString();
       const completedAt = status === 'completed' ? new Date(Date.now() - rand(0, daysAgo) * 86400000).toISOString() : null;
-      insertMaint.run(
-        uuidv4(), mid, pick(['inspection', 'repair', 'replacement', 'cleaning', 'upgrade']),
-        pick(TASKS),
-        pick(MANAGERS), pick(PHONES), status, createdAt, completedAt
-      );
+      insertMaint.run(uuidv4(), mid, pick(['inspection', 'repair', 'replacement', 'cleaning', 'upgrade']),
+        pick(TASKS), pick(MANAGERS), pick(PHONES), status, createdAt, completedAt);
     }
   }
 });
@@ -260,7 +227,6 @@ const insertHS = db.prepare(`
 
 const hsTrx = db.transaction(() => {
   for (const mid of manholeIds) {
-    // Gradual decline simulation
     const initialTotal = randf(82, 98);
     for (let d = 0; d < 90; d++) {
       const decline = d * 0.08;
@@ -269,32 +235,28 @@ const hsTrx = db.transaction(() => {
       const battery = clamp(initialTotal - decline * 1.2 + noise + randf(-3, 3), 30, 100);
       const comm = clamp(initialTotal - decline * 0.7 + noise + randf(-1, 1), 55, 100);
       const total = clamp(sensor * 0.4 + battery * 0.3 + comm * 0.3, 0, 100);
-      insertHS.run(
-        mid,
-        Math.round(sensor * 100) / 100,
-        Math.round(battery * 100) / 100,
-        Math.round(comm * 100) / 100,
-        Math.round(total * 100) / 100,
-        new Date(Date.now() - (89 - d) * 86400000).toISOString()
-      );
+      insertHS.run(mid, Math.round(sensor * 100) / 100, Math.round(battery * 100) / 100,
+        Math.round(comm * 100) / 100, Math.round(total * 100) / 100,
+        new Date(Date.now() - (89 - d) * 86400000).toISOString());
     }
   }
 });
 hsTrx();
 
-// ----- USERS -----
+// ----- USERS (with bcrypt hashed passwords) -----
 console.log('[seed] inserting users...');
+const hash = (pw) => bcrypt.hashSync(pw, 10);
 db.prepare(`INSERT INTO users (id, username, password, display_name, role, status, email, phone) VALUES (?,?,?,?,?,?,?,?)`).run(
-  uuidv4(), 'admin', 'admin123', '系统管理员', 'admin', 'active', 'admin@manhole.cn', '13800000000'
+  uuidv4(), 'admin', hash('admin123'), '系统管理员', 'admin', 'active', 'admin@manhole.cn', '13800000000'
 );
 db.prepare(`INSERT INTO users (id, username, password, display_name, role, status, email, phone) VALUES (?,?,?,?,?,?,?,?)`).run(
-  uuidv4(), 'operator', '123456', '运维操作员', 'operator', 'active', 'op@manhole.cn', '13800000001'
+  uuidv4(), 'operator', hash('123456'), '运维操作员', 'operator', 'active', 'op@manhole.cn', '13800000001'
 );
 db.prepare(`INSERT INTO users (id, username, password, display_name, role, status, email, phone) VALUES (?,?,?,?,?,?,?,?)`).run(
-  uuidv4(), 'viewer', '123456', '观察员', 'viewer', 'active', 'viewer@manhole.cn', '13800000002'
+  uuidv4(), 'viewer', hash('123456'), '观察员', 'viewer', 'active', 'viewer@manhole.cn', '13800000002'
 );
 
 console.log('[seed] done!');
 console.log(`  - 50 manholes`);
-console.log(`  - 50 × 72h = ${50 * 72} realtime data points`);
-console.log(`  - 3 users (admin/operator/viewer)`);
+console.log(`  - 50 x 72h = ${50 * 72} realtime data points`);
+console.log(`  - 3 users (admin/operator/viewer, passwords hashed with bcrypt)`);

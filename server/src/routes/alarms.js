@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { getDb } = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { authMiddleware } = require('../middleware/auth');
 
 const router = Router();
 
@@ -28,14 +29,18 @@ router.get('/:id', (req, res) => {
   res.json({ data: row });
 });
 
-router.put('/:id/resolve', (req, res) => {
+router.put('/:id/resolve', authMiddleware, (req, res) => {
   const db = getDb();
+  const existing = db.prepare('SELECT id FROM alarms WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: '告警不存在' });
   db.prepare("UPDATE alarms SET is_resolved = 1, resolved_at = datetime('now') WHERE id = ?").run(req.params.id);
   res.json({ success: true });
 });
 
-router.put('/:id/acknowledge', (req, res) => {
+router.put('/:id/acknowledge', authMiddleware, (req, res) => {
   const db = getDb();
+  const existing = db.prepare('SELECT id FROM alarms WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: '告警不存在' });
   db.prepare("UPDATE alarms SET confirmed_at = datetime('now') WHERE id = ?").run(req.params.id);
   res.json({ success: true });
 });

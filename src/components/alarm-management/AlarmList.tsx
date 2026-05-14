@@ -130,8 +130,11 @@ const AlarmList: React.FC<AlarmListProps> = ({
       }
       
       // 筛选确认状态
-      if (filters.isAcknowledged !== undefined && alarm.isResolved !== filters.isAcknowledged) {
-        return false;
+      if (filters.isAcknowledged !== undefined) {
+        const isAcknowledged = !!alarm.acknowledgeTime;
+        if (isAcknowledged !== filters.isAcknowledged) {
+          return false;
+        }
       }
       
       // 筛选解决状态

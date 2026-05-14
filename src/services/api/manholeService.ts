@@ -110,3 +110,17 @@ export const fetchRealtimeHistory = async (manholeId: string, limit: number = 10
   const res = await apiClient.get<{ data: any[] }>(`/realtime/${manholeId}/history?limit=${limit}`);
   return (res.data.data || []).map(transformRealtimeData);
 };
+
+export const createManhole = async (data: Record<string, any>): Promise<ManholeInfo> => {
+  const res = await apiClient.post<{ data: any }>('/manholes', data);
+  return transformManholeInfo(res.data.data);
+};
+
+export const updateManhole = async (id: string, data: Record<string, any>): Promise<ManholeInfo> => {
+  const res = await apiClient.put<{ data: any }>(`/manholes/${id}`, data);
+  return transformManholeInfo(res.data.data);
+};
+
+export const deleteManhole = async (id: string): Promise<void> => {
+  await apiClient.delete(`/manholes/${id}`);
+};

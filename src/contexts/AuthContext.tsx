@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { login as apiLogin, logout as apiLogout, getStoredUser, getStoredToken, verifyToken, User } from '../services/api/userService';
+import { login as apiLogin, logout as apiLogout, getStoredToken, verifyToken, User } from '../services/api/userService';
+import { setAuthToken } from '../services/api/client';
 
 interface AuthContextType {
   user: User | null;
@@ -22,28 +23,27 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(getStoredUser());
-  const [token, setToken] = useState<string | null>(getStoredToken());
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedTokenVal = getStoredToken();
-    if (storedTokenVal) {
-      verifyToken()
-        .then((u) => {
-          setUser(u);
-          setToken(storedTokenVal);
-        })
-        .catch(() => {
-          setUser(null);
-          setToken(null);
-          sessionStorage.removeItem('auth_token');
-          sessionStorage.removeItem('auth_user');
-        })
-        .finally(() => setLoading(false));
-    } else {
+    const storedToken = getStoredToken();
+    if (!storedToken) {
       setLoading(false);
+      return;
     }
+    verifyToken()
+      .then((u) => {
+        setUser(u);
+        setToken(storedToken);
+      })
+      .catch(() => {
+        setUser(null);
+        setToken(null);
+        setAuthToken(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {

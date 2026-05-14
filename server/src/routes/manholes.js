@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { getDb } = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { authMiddleware } = require('../middleware/auth');
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.get('/:id', (req, res) => {
   res.json({ data: row });
 });
 
-router.post('/', (req, res) => {
+router.post('/', authMiddleware, (req, res) => {
   const db = getDb();
   const id = uuidv4();
   const { name, device_id, latitude, longitude, address, district, model, manufacturer, material, diameter, depth, manager, contact_phone, sensor_types } = req.body;
@@ -35,7 +36,7 @@ router.post('/', (req, res) => {
   res.status(201).json({ data: created });
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', authMiddleware, (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM manholes WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'not found' });
@@ -62,7 +63,7 @@ router.put('/:id', (req, res) => {
   res.json({ data: updated });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', authMiddleware, (req, res) => {
   const db = getDb();
   db.prepare('DELETE FROM manholes WHERE id = ?').run(req.params.id);
   res.json({ success: true });
