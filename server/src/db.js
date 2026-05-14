@@ -119,7 +119,8 @@ function initSchema(db) {
       status TEXT DEFAULT 'active',
       email TEXT,
       phone TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
     );
 
     CREATE INDEX IF NOT EXISTS idx_realtime_manhole ON real_time_data(manhole_id, recorded_at DESC);
@@ -128,6 +129,19 @@ function initSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_maintenance_manhole ON maintenance_records(manhole_id);
     CREATE INDEX IF NOT EXISTS idx_health_manhole ON health_scores(manhole_id, recorded_at DESC);
   `);
+
+  // 迁移：为 users 表添加 updated_at 列（如果不存在）
+  try {
+    const columns = db.prepare("PRAGMA table_info(users)").all();
+    const hasUpdatedAt = columns.some(col => col.name === 'updated_at');
+    if (!hasUpdatedAt) {
+      db.exec("ALTER TABLE users ADD COLUMN updated_at TEXT");
+      db.exec("UPDATE users SET updated_at = datetime('now') WHERE updated_at IS NULL");
+      console.log('[db] 迁移：已为 users 表添加 updated_at 列');
+    }
+  } catch (err) {
+    console.error('[db] 迁移检查失败:', err.message);
+  }
 }
 
 module.exports = { getDb };

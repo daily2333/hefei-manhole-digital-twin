@@ -27,6 +27,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { ManholeInfo, ManholeStatus, ManholeRealTimeData, CoverStatus } from '../../typings';
+import { fetchRealtimeHistory } from '../../services/api/manholeService';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -234,72 +235,39 @@ const DataSearch: React.FC<DataSearchProps> = ({ manholes = [], realTimeDataMap 
   };
 
   // 历史数据查询
-  const handleHistorySearch = (values: any) => {
+  const handleHistorySearch = async (values: any) => {
     setLoading(true);
-    
-    // 模拟API请求延迟
-    setTimeout(() => {
-      // 生成模拟历史数据结果
+    try {
+      if (!values.manholeId) {
+        message.warning('请选择井盖');
+        setLoading(false);
+        return;
+      }
+      const historyData = await fetchRealtimeHistory(values.manholeId, 200);
       const startDate = values.dateRange[0].startOf('day');
       const endDate = values.dateRange[1].endOf('day');
-      const daysDiff = endDate.diff(startDate, 'days');
-      
-      const mockHistoryResults: QueryResult[] = [];
-      
-      // 为每一天生成数据
-      for (let i = 0; i <= daysDiff; i++) {
-        const currentDate = dayjs(startDate).add(i, 'day');
-        
-        // 每天生成几个时间点的数据
-        for (let hour = 0; hour < 24; hour += 4) {
-          const timestamp = dayjs(currentDate).add(hour, 'hours');
-          
-          // 只为选中的井盖生成数据
-          if (values.manholeId) {
-            const manhole = manholes.find(m => m.id === values.manholeId);
-            if (manhole) {
-              // 添加温度数据
-              mockHistoryResults.push({
-                timestamp: timestamp.format('YYYY-MM-DD HH:mm:ss'),
-                manholeId: manhole.id,
-                manholeName: manhole.name,
-                status: randomStatus(),
-                parameter: '温度',
-                value: 20 + Math.random() * 10,
-                unit: '°C'
-              });
-              
-              // 添加湿度数据
-              mockHistoryResults.push({
-                timestamp: timestamp.format('YYYY-MM-DD HH:mm:ss'),
-                manholeId: manhole.id,
-                manholeName: manhole.name,
-                status: randomStatus(),
-                parameter: '湿度',
-                value: 50 + Math.random() * 30,
-                unit: '%'
-              });
-            }
-          }
-        }
+      const filtered = historyData.filter(d => {
+        const t = dayjs(d.timestamp);
+        return t.isAfter(startDate) && t.isBefore(endDate);
+      });
+      const results: QueryResult[] = [];
+      const manhole = manholes.find(m => m.id === values.manholeId);
+      const manholeName = manhole?.name || values.manholeId;
+      for (const d of filtered) {
+        const ts = dayjs(d.timestamp).format('YYYY-MM-DD HH:mm:ss');
+        results.push({ timestamp: ts, manholeId: d.manholeId, manholeName, status: manhole?.status || ManholeStatus.Normal, parameter: '温度', value: d.temperature, unit: '°C' });
+        results.push({ timestamp: ts, manholeId: d.manholeId, manholeName, status: manhole?.status || ManholeStatus.Normal, parameter: '湿度', value: d.humidity, unit: '%' });
+        results.push({ timestamp: ts, manholeId: d.manholeId, manholeName, status: manhole?.status || ManholeStatus.Normal, parameter: '水位', value: d.waterLevel, unit: 'mm' });
+        results.push({ timestamp: ts, manholeId: d.manholeId, manholeName, status: manhole?.status || ManholeStatus.Normal, parameter: '电池', value: d.batteryLevel, unit: '%' });
       }
-      
-      setResults(mockHistoryResults);
+      setResults(results);
+      message.success(`历史查询完成，共找到 ${results.length} 条记录`);
+    } catch (err) {
+      console.error('历史查询失败:', err);
+      message.error('历史查询失败，请重试');
+    } finally {
       setLoading(false);
-      message.success(`历史查询完成，共找到 ${mockHistoryResults.length} 条记录`);
-    }, 1500);
-  };
-
-  // 随机状态生成辅助函数
-  const randomStatus = (): ManholeStatus => {
-    const statuses = [
-      ManholeStatus.Normal,
-      ManholeStatus.Warning,
-      ManholeStatus.Alarm,
-      ManholeStatus.Offline,
-      ManholeStatus.Maintenance
-    ];
-    return statuses[Math.floor(Math.random() * statuses.length)];
+    }
   };
 
   // 保存当前搜索

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Row, Col, Card, Statistic, Typography, Badge, Spin, Tooltip, Empty } from 'antd';
 import { 
   ManholeInfo, 
@@ -20,6 +20,7 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
+import { fetchEnvironmentSummary } from '../../services/api/environmentService';
 const { Text } = Typography;
 
 const dashboardCardStyles = {
@@ -97,6 +98,16 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
       offlineCount
     };
   }, [manholes, alarms]);
+
+  // 计算平均值
+  const avgWaterLevel = useMemo(() => {
+    const values = Array.from(realTimeDataMap.values()).map(d => d.waterLevel).filter(v => v != null);
+    return values.length > 0 ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : 0;
+  }, [realTimeDataMap]);
+  const avgGasLevel = useMemo(() => {
+    const values = Array.from(realTimeDataMap.values()).map(d => d.gasConcentration?.ch4 ?? 0).filter(v => v != null);
+    return values.length > 0 ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : 0;
+  }, [realTimeDataMap]);
 
   // 获取异常井盖
   const abnormalManholes = useMemo(() => {
@@ -265,22 +276,74 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
     );
   };
 
+  // 温度监测趋势图数据 - 从API获取真实数据
+  const [tempChartData, setTempChartData] = useState<{ values: { hour: string; value: number }[] }>({ values: [] });
+  
+  useEffect(() => {
+    const loadTempData = async () => {
+      try {
+        const envData = await fetchEnvironmentSummary('24h');
+        if (envData.temperatureData && envData.temperatureData.length > 0) {
+          const values = envData.temperatureData.map((d: any) => ({
+            hour: new Date(d.time).getHours() + ':00',
+            value: Math.round(d.value * 10) / 10
+          }));
+          setTempChartData({ values });
+        } else {
+          const temps = Array.from(realTimeDataMap.values()).map(d => d.temperature).filter(t => t != null);
+          const avgTemp = temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : 25;
+          const fallback = Array.from({ length: 24 }, (_, i) => {
+            const date = new Date();
+            date.setHours(date.getHours() - 23 + i);
+            return { hour: date.getHours() + ':00', value: Math.round(avgTemp * 10) / 10 };
+          });
+          setTempChartData({ values: fallback });
+        }
+      } catch (err) {
+        console.error('获取温度数据失败:', err);
+        const temps = Array.from(realTimeDataMap.values()).map(d => d.temperature).filter(t => t != null);
+        const avgTemp = temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : 25;
+        const fallback = Array.from({ length: 24 }, (_, i) => {
+          const date = new Date();
+          date.setHours(date.getHours() - 23 + i);
+          return { hour: date.getHours() + ':00', value: Math.round(avgTemp * 10) / 10 };
+        });
+        setTempChartData({ values: fallback });
+      }
+    };
+    loadTempData();
+  }, [realTimeDataMap]);
+
+  // 异常预警趋势图数据
+  const alertChartData = useMemo(() => {
+    const dayLabels = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - 6 + i);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    });
+    const warning = dayLabels.map((_, dayIdx) => {
+      const dayStart = new Date(Date.now() - (6 - dayIdx) * 86400000);
+      const dayEnd = new Date(dayStart.getTime() + 86400000);
+      return alarms.filter(a => {
+        const t = new Date(a.time).getTime();
+        return !a.isResolved && t >= dayStart.getTime() && t < dayEnd.getTime();
+      }).length;
+    });
+    const alarm = dayLabels.map((_, dayIdx) => {
+      const dayStart = new Date(Date.now() - (6 - dayIdx) * 86400000);
+      const dayEnd = new Date(dayStart.getTime() + 86400000);
+      return alarms.filter(a => {
+        const t = new Date(a.time).getTime();
+        return a.isResolved && t >= dayStart.getTime() && t < dayEnd.getTime();
+      }).length;
+    });
+    return { days: dayLabels, warningData: warning, alarmData: alarm };
+  }, [alarms]);
+
   // 温度监测趋势图
   const renderTemperatureChart = () => {
-    // 生成过去24小时的时间点
-    const hours = Array.from({ length: 24 }, (_, i) => {
-      const date = new Date();
-      date.setHours(date.getHours() - 23 + i);
-      return date.getHours() + ':00';
-    });
-
-    // 生成模拟数据
-    const generateData = () => {
-      const baseTemp = 25;
-      return Array.from({ length: 24 }, () => {
-        return Math.round((baseTemp + Math.random() * 10 - 5) * 10) / 10;
-      });
-    };
+    const tempValues = tempChartData.values;
+    const hours = tempValues.map(t => t.hour);
 
     const option = {
       backgroundColor: 'transparent',
@@ -368,7 +431,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
             borderColor: '#ff4d4f',
             borderWidth: 2
           },
-          data: generateData()
+          data: tempValues.map(t => t.value)
         }
       ]
     };
@@ -392,22 +455,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
 
   // 异常预警趋势图
   const renderAlertTrendChart = () => {
-    // 生成过去7天的日期
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - 6 + i);
-      return `${date.getMonth() + 1}/${date.getDate()}`;
-    });
-
-    // 生成模拟数据
-    const generateAlertData = () => {
-      return Array.from({ length: 7 }, () => {
-        return Math.floor(Math.random() * 15);
-      });
-    };
-
-    const warningData = generateAlertData();
-    const alarmData = generateAlertData().map(val => Math.floor(val / 2));
+    const { days, warningData, alarmData } = alertChartData;
     
     const option = {
       backgroundColor: 'transparent',
@@ -560,13 +608,13 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
           >
             <Statistic 
               title={<Text style={{ color: '#8c8c8c' }}>平均水位</Text>}
-              value={42.5}
+              value={avgWaterLevel}
               valueStyle={{ color: '#32ccbc', fontSize: '28px' }}
               prefix={<RiseOutlined style={{ fontSize: '20px' }} />}
-              suffix="%"
+              suffix="mm"
             />
             <div className="stat-footer">
-              <Badge status="success" text={<Text style={{ color: '#8c8c8c' }}>较昨日: <span style={{ color: '#52c41a' }}>↓2.3%</span></Text>} />
+              <Badge status="success" text={<Text style={{ color: '#8c8c8c' }}>数据来自实时监测</Text>} />
             </div>
           </Card>
         </Col>
@@ -578,13 +626,13 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
           >
             <Statistic 
               title={<Text style={{ color: '#8c8c8c' }}>平均气体浓度</Text>}
-              value={28.7}
+              value={avgGasLevel}
               valueStyle={{ color: '#faad14', fontSize: '28px' }}
               prefix={<CloudOutlined style={{ fontSize: '20px' }} />}
               suffix="ppm"
             />
             <div className="stat-footer">
-              <Badge status="warning" text={<Text style={{ color: '#8c8c8c' }}>较昨日: <span style={{ color: '#faad14' }}>↑4.2%</span></Text>} />
+              <Badge status="warning" text={<Text style={{ color: '#8c8c8c' }}>数据来自实时监测</Text>} />
             </div>
           </Card>
         </Col>

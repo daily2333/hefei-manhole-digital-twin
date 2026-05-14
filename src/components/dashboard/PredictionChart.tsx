@@ -66,51 +66,9 @@ const PredictionChart: React.FC<PredictionChartProps> = ({ manholeId }) => {
     }
   };
   
-  // 创建默认数据函数
-  const createDefaultData = () => {
-    const now = new Date();
-    const data: ChartDataItem[] = [];
-    
-    // 创建24小时的模拟数据
-    for (let i = -12; i < 12; i++) {
-      const timestamp = new Date(now.getTime() + i * 3600000).toISOString();
-      const isActual = i < 0;
-      
-      // 根据数据类型生成合理范围的值
-      let value: number;
-      switch (dataType) {
-        case 'temperature':
-          value = 20 + Math.sin(i * 0.5) * 5 + Math.random() * 2;
-          break;
-        case 'humidity':
-          value = 50 + Math.sin(i * 0.3) * 15 + Math.random() * 5;
-          break;
-        case 'gasConcentration':
-          value = 40 + Math.sin(i * 0.2) * 30 + Math.random() * 10;
-          break;
-        case 'waterLevel':
-          value = 15 + Math.sin(i * 0.1) * 10 + Math.random() * 5;
-          break;
-        case 'batteryLevel':
-          value = 85 - i * 0.2 + Math.random();
-          break;
-        default:
-          value = 50 + Math.random() * 20;
-      }
-      
-      data.push({
-        timestamp,
-        value,
-        type: isActual ? '实际数据' : '预测数据',
-        formattedTime: new Date(timestamp).toLocaleString('zh-CN', {
-          month: 'short',
-          day: 'numeric',
-          hour: 'numeric'
-        })
-      });
-    }
-    
-    return data;
+  // 创建默认数据函数 - 返回空数组，等待真实数据加载
+  const createDefaultData = (): ChartDataItem[] => {
+    return [];
   };
   
   // 组件挂载时生成默认数据
@@ -124,65 +82,48 @@ const PredictionChart: React.FC<PredictionChartProps> = ({ manholeId }) => {
     if (manholeId) {
       setLoading(true);
       
-      try {
-        // 获取预测数据
-        const data = predictionService.predictFutureTrend(manholeId, dataType);
-        
-        // 确保数据非空
-        if (data && data.length > 0) {
-          // 直接使用ISO字符串格式的日期
-          const formattedData = data.map(item => ({
-            timestamp: item.timestamp, // 保持原始ISO字符串格式
-            value: item.value,
-            type: item.isActual ? '实际数据' : '预测数据',
-            formattedTime: new Date(item.timestamp).toLocaleString('zh-CN', { 
-              month: 'short', 
-              day: 'numeric', 
-              hour: 'numeric', 
-              minute: 'numeric'
-            })
-          }));
+      const loadData = async () => {
+        try {
+          const data = await predictionService.predictFutureTrend(manholeId, dataType);
           
-          // 简单验证
-          if (formattedData.length > 0) {
-            console.log('数据获取成功，数据项数量:', formattedData.length);
-            // 打印第一项作为示例
-            console.log('示例数据项:', formattedData[0]);
+          if (data && data.length > 0) {
+            const formattedData = data.map(item => ({
+              timestamp: item.timestamp,
+              value: item.value,
+              type: item.isActual ? '实际数据' : '预测数据',
+              formattedTime: new Date(item.timestamp).toLocaleString('zh-CN', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: 'numeric', 
+                minute: 'numeric'
+              })
+            }));
+            
             setPredictionData(formattedData);
           } else {
-            console.warn('格式化后没有数据');
             setPredictionData([]);
           }
-        } else {
-          console.warn('预测数据为空');
+        } catch (error) {
+          console.error('获取预测数据出错:', error);
           setPredictionData([]);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('获取预测数据出错:', error);
-        setPredictionData([]);
-      } finally {
-        setLoading(false);
-      }
+      };
+      
+      loadData();
     }
   }, [manholeId, dataType]);
   
   // 渲染图表前进行数据预处理
   const processChartData = (data: ChartDataItem[]) => {
-    // 创建默认数据
-    const createDefaultData = () => {
-      const now = Date.now();
-      return Array.from({ length: 5 }, (_, i) => ({
-        // 确保日期格式正确，使用ISO字符串
-        timestamp: new Date(now + i * 3600000).toISOString(),
-        value: 20 + Math.random() * 10,
-        type: i < 2 ? '实际数据' : '预测数据',
-        formattedTime: new Date(now + i * 3600000).toLocaleString('zh-CN')
-      }));
+    // 创建默认数据 - 返回空数组
+    const createDefaultData = (): ChartDataItem[] => {
+      return [];
     };
     
     if (!data || data.length === 0) {
-      console.log('没有可用数据，使用默认数据');
-      return createDefaultData();
+      return [];
     }
     
     // 简化数据处理：转换为图表库需要的格式

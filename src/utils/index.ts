@@ -1,3 +1,5 @@
+import { AlarmLevel } from '../typings';
+
 /**
  * 日期时间格式化函数
  * @param dateStr 日期字符串或Date对象
@@ -94,18 +96,23 @@ export const formatWithUnit = (value: number, unit: string, decimal = 1): string
  */
 export const getAlarmLevelColor = (level: string): string => {
   switch (level) {
+    case AlarmLevel.Info:
     case 'Info':
     case 'info':
       return '#1890ff'; // 蓝色
+    case AlarmLevel.Notice:
     case 'Notice':
     case 'notice':
       return '#52c41a'; // 绿色
+    case AlarmLevel.Warning:
     case 'Warning':
     case 'warning':
       return '#faad14'; // 黄色
+    case AlarmLevel.Alert:
     case 'Alert':
     case 'alert':
       return '#fa8c16'; // 橙色
+    case AlarmLevel.Emergency:
     case 'Emergency':
     case 'emergency':
       return '#ff4d4f'; // 红色

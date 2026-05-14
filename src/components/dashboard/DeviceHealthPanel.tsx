@@ -41,38 +41,33 @@ const DeviceHealthPanel: React.FC<DeviceHealthPanelProps> = ({
     if (manholeInfo && recentData.length > 0) {
       setIsRefreshing(true);
       
-      // 模拟数据处理延迟
-      setTimeout(() => {
-        // 获取设备健康数据
-        const latestData = recentData[recentData.length - 1] || recentData[0];
-        const healthResults = predictionService.predictDeviceHealth(latestData, manholeInfo.status, manholeInfo.installationDate);
-        setHealthData(healthResults);
-        
-        // 获取异常数据
-        const temperatureAnomalies = predictionService.detectDataAnomalies(
-          manholeInfo.id,
-          'temperature'
-        );
-        
-        const humidityAnomalies = predictionService.detectDataAnomalies(
-          manholeInfo.id,
-          'humidity'
-        );
-        
-        const gasAnomalies = predictionService.detectDataAnomalies(
-          manholeInfo.id,
-          'gasConcentration'
-        );
-        
-        setAnomalyData({
-          temperature: temperatureAnomalies,
-          humidity: humidityAnomalies,
-          gasConcentration: gasAnomalies
-        });
-        
-        setLastUpdated(new Date());
-        setIsRefreshing(false);
-      }, 600);
+      const loadData = async () => {
+        try {
+          const latestData = recentData[recentData.length - 1] || recentData[0];
+          const healthResults = predictionService.predictDeviceHealth(latestData, manholeInfo.status, manholeInfo.installationDate);
+          setHealthData(healthResults);
+          
+          const [temperatureAnomalies, humidityAnomalies, gasAnomalies] = await Promise.all([
+            predictionService.detectDataAnomalies(manholeInfo.id, 'temperature'),
+            predictionService.detectDataAnomalies(manholeInfo.id, 'humidity'),
+            predictionService.detectDataAnomalies(manholeInfo.id, 'gasConcentration')
+          ]);
+          
+          setAnomalyData({
+            temperature: temperatureAnomalies,
+            humidity: humidityAnomalies,
+            gasConcentration: gasAnomalies
+          });
+          
+          setLastUpdated(new Date());
+        } catch (err) {
+          console.error('加载健康数据失败:', err);
+        } finally {
+          setIsRefreshing(false);
+        }
+      };
+      
+      loadData();
     }
   }, [manholeInfo, recentData]);
   

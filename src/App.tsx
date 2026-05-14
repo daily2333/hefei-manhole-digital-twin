@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Button, Card, Col, ConfigProvider, Divider, Row, Statistic, Tag, theme, message } from 'antd';
+import { Button, Card, Col, Divider, Row, Statistic, Tag, message } from 'antd';
 import { AppLayout } from './components/layout/AppLayout';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import MainContent from './components/dashboard/MainContent';
@@ -47,7 +47,6 @@ const appFallback = (
 );
 
 const App: React.FC = () => {
-  const { darkAlgorithm } = theme;
   const [manholes, setManholes] = useState<ManholeInfo[]>([]);
   const [selectedManhole, setSelectedManhole] = useState<ManholeInfo | null>(null);
   const [realTimeDataMap, setRealTimeDataMap] = useState<Map<string, ManholeRealTimeData>>(new Map());
@@ -247,30 +246,11 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ConfigProvider theme={{
-      algorithm: darkAlgorithm,
-      token: {
-        colorPrimary: '#1890ff', colorBgBase: '#041527', colorTextBase: 'rgba(255, 255, 255, 0.85)', borderRadius: 6,
-      },
-      components: {
-        Card: { colorBgContainer: 'rgba(13, 28, 50, 0.6)', borderRadiusLG: 8 },
-        Menu: { colorItemBg: 'transparent', colorItemText: 'rgba(255, 255, 255, 0.65)', colorItemTextSelected: '#1890ff', colorItemBgSelected: 'rgba(24, 144, 255, 0.1)' },
-        Layout: { headerBg: 'rgba(0, 20, 40, 0.7)', bodyBg: 'transparent' },
-        Table: { colorBgContainer: 'rgba(0, 20, 40, 0.5)', headerBg: 'rgba(0, 30, 60, 0.6)' },
-        Button: { controlHeight: 36 },
-        Form: { colorTextLabel: 'rgba(255, 255, 255, 0.85)', colorText: 'rgba(255, 255, 255, 0.95)' },
-        Input: { colorText: 'rgba(255, 255, 255, 0.95)', colorBgContainer: 'rgba(0, 20, 40, 0.5)', colorBorder: 'rgba(100, 150, 200, 0.2)' },
-        Select: { colorText: 'rgba(255, 255, 255, 0.95)', colorBgContainer: 'rgba(0, 20, 40, 0.5)', colorTextPlaceholder: 'rgba(255, 255, 255, 0.45)', colorBorder: 'rgba(100, 150, 200, 0.2)' },
-        DatePicker: { colorText: 'rgba(255, 255, 255, 0.95)', colorBgContainer: 'rgba(0, 20, 40, 0.5)', colorTextPlaceholder: 'rgba(255, 255, 255, 0.45)', colorBorder: 'rgba(100, 150, 200, 0.2)' },
-        Modal: { colorText: 'rgba(255, 255, 255, 0.95)', colorBgElevated: 'rgba(13, 28, 50, 0.95)' },
-      },
-    }}>
-      <ErrorBoundary fallback={appFallback}>
-        <AppLayout currentTime={currentTime} notifications={notifications} onClearNotifications={handleClearNotifications} isFullscreen={isFullscreen} toggleFullScreen={toggleFullScreen}>
-          <MainContent manholes={manholes} alarms={alarms} selectedManhole={selectedManhole} realTimeDataMap={realTimeDataMap} onSelectManhole={handleSelectManhole} activeTab={activeTab} onTabChange={handleTabChange} loading={loading} healthScoreCard={selectedManhole ? renderHealthScoreCard(selectedManhole) : null} onRefresh={handleManualRefresh} performanceScore={performanceScore} />
-        </AppLayout>
-      </ErrorBoundary>
-    </ConfigProvider>
+    <ErrorBoundary fallback={appFallback}>
+      <AppLayout currentTime={currentTime} notifications={notifications} onClearNotifications={handleClearNotifications} isFullscreen={isFullscreen} toggleFullScreen={toggleFullScreen}>
+        <MainContent manholes={manholes} alarms={alarms} selectedManhole={selectedManhole} realTimeDataMap={realTimeDataMap} onSelectManhole={handleSelectManhole} activeTab={activeTab} onTabChange={handleTabChange} loading={loading} healthScoreCard={selectedManhole ? renderHealthScoreCard(selectedManhole) : null} onRefresh={handleManualRefresh} performanceScore={performanceScore} />
+      </AppLayout>
+    </ErrorBoundary>
   );
 };
 

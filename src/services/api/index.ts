@@ -4,4 +4,7 @@ export * from './manholeService';
 export * from './alarmService';
 export * from './maintenanceService';
 export * from './statsService';
+export * from './userService';
+export * from './environmentService';
+export * from './analyticsService';
 export * from './types';

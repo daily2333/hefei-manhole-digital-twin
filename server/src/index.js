@@ -8,6 +8,7 @@ const realtimeRouter = require('./routes/realtime');
 const alarmsRouter = require('./routes/alarms');
 const maintenanceRouter = require('./routes/maintenance');
 const statsRouter = require('./routes/stats');
+const usersRouter = require('./routes/users');
 const { setupMqttClient } = require('./mqtt/client');
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/realtime', realtimeRouter);
 app.use('/api/alarms', alarmsRouter);
 app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

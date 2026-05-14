@@ -13,14 +13,78 @@
 - 正确示例：`Remove-Item "C:\path\to\file.txt"`
 - 如果需要批量删除文件，应停止操作，并让用户手动删除。
 
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+
 ## 项目定位
 
-这是一个"智能井盖数字孪生"前端项目，核心目标是用大屏/控制台风格界面展示井盖资产、实时监测、告警、维护、3D 可视化、预测分析、环境数据、统计报表、数据检索和系统设置。
+这是一个"智能井盖数字孪生"全栈项目，包含前端控制台和后端 API 服务。核心目标是用大屏/控制台风格界面展示井盖资产、实时监测、告警、维护、3D 可视化、预测分析、环境数据、统计报表、数据检索和系统设置。
+
+**架构概览：**
+- **前端**：React 18 + TypeScript + Ant Design 5，通过 REST API 和 WebSocket 与后端通信
+- **后端**：Express + SQLite + Socket.IO，提供 RESTful API 和实时数据推送
+- **数据流**：前端 → REST API → SQLite ← MQTT Client ← IoT 设备
+- **实时推送**：MQTT 数据到达后通过 Socket.IO 推送到前端
 
 所有数据来自 Express + SQLite 后端（端口 4000），不再使用前端模拟数据。MQTT 接口已预留用于 IoT 设备数据接入。
 
 ## 技术栈
 
+**前端：**
 - React 18
 - TypeScript
 - Ant Design 5
@@ -32,6 +96,15 @@
 - `@react-three/drei`
 - 高德地图 JS API
 - Day.js
+- Socket.IO Client（实时推送）
+- Axios（HTTP 请求）
+
+**后端：**
+- Express 4
+- SQLite（better-sqlite3）
+- Socket.IO（WebSocket 实时推送）
+- MQTT（IoT 设备数据接入）
+- JWT（用户认证）
 
 ## 入口与应用骨架
 
@@ -46,10 +119,12 @@
 
 - `src/AppWithRoutes.tsx`
   - 使用 `BrowserRouter`。
-  - 当前只提供两个路由：
-    - `/` -> `App`
-    - `/hefei-map` -> `HefeiMapPage`
-  - 页面左上角有一个简单的固定路由切换按钮条。
+  - 包裹 `AuthProvider` 提供认证上下文。
+  - 使用 `ProtectedRoute` 保护需要登录的页面。
+  - 路由配置：
+    - `/login` -> `LoginPage`（登录页面）
+    - `/` -> `App`（主控制台，需要认证）
+  - 未认证用户自动跳转到登录页面。
 
 ### 主应用
 
@@ -115,6 +190,8 @@
   - 告警总览、告警列表、确认/处理等。
 - `amap`
   - 高德地图基础封装，包含地图、点位、信息窗、聚合、类型定义。
+- `common`
+  - 通用图表组件。
 - `dashboard`
   - 仪表盘相关卡片、图表、详情、主标签页。
 - `data-analytics`
@@ -150,11 +227,31 @@
   - 单井盖实时数据 Hook。
   - 多井盖实时数据 Hook。
   - 有全局缓存、延迟批处理、显著变化阈值判断、空闲时更新等性能优化。
+- `useRealtimeSocket.ts`
+  - WebSocket 实时推送 Hook。
+  - 全局单例 Socket.IO 连接。
+  - 提供事件订阅：`realtime:global`（全局实时数据更新）、`alarm:new`（新告警）。
+  - 支持房间管理：`joinManhole(id)`、`leaveManhole(id)` 订阅特定井盖数据。
 
 ### `src/services`
 
 - `predictionService.ts`
   - 简易预测与异常分析服务。
+- `bootstrapDataService.ts`
+  - 应用启动数据加载，并行请求 manholes/alarms/maintenance/realtime。
+- `api/`
+  - REST API 封装层（11 个文件）：
+    - `client.ts` — Axios 实例，统一 baseURL、timeout、Bearer Token 管理
+    - `types.ts` — API 响应类型定义
+    - `index.ts` — 统一导出所有 service
+    - `manholeService.ts` — 井盖 CRUD + 实时数据查询
+    - `alarmService.ts` — 告警查询/确认/解决
+    - `maintenanceService.ts` — 维护记录查询
+    - `dashboardService.ts` — 启动引导数据
+    - `statsService.ts` — 统计概览
+    - `userService.ts` — 用户登录/登出/CRUD + Token 验证
+    - `environmentService.ts` — 环境摘要/气体分布/井盖状态
+    - `analyticsService.ts` — 分析数据/报表数据/区域摘要
 
 ### `src/utils`
 
@@ -162,6 +259,10 @@
 
 ### `src/pages`
 
+- `LoginPage.tsx`
+  - 登录页面，使用 Ant Design 表单组件。
+  - 深色科技风格，与主应用视觉一致。
+  - 显示演示账号信息（admin / admin123）。
 - `HefeiMapPage.tsx`
   - 合肥井盖分布专题页面。
 - `DailyReportPage.tsx`
@@ -266,6 +367,13 @@
 - 文件顶层直接 `setInterval(cleanupCache, ...)`，属于全局副作用。
 - 默认实时刷新间隔是 1 小时，不是秒级真实时。
 
+### WebSocket 实时推送
+
+- `useRealtimeSocket.ts` 提供全局单例 Socket.IO 连接。
+- 监听 `realtime:global` 事件获取全局实时数据更新。
+- 监听 `alarm:new` 事件获取新告警。
+- 支持通过 `joinManhole(id)` / `leaveManhole(id)` 订阅特定井盖数据。
+
 ## 仪表盘与业务模块理解
 
 ### 综合仪表盘 `src/components/dashboard/DashboardTab.tsx`
@@ -335,6 +443,10 @@
   - `apiKey`
   - `securityKey`
   - `securityJsCode`
+- 支持环境变量覆盖：
+  - `REACT_APP_AMAP_API_KEY`
+  - `REACT_APP_AMAP_SECURITY_KEY`
+  - `REACT_APP_AMAP_SECURITY_JS_CODE`
 - 默认地图中心是合肥：
   - `[117.27, 31.86]`
 - 默认缩放级别 `12`
@@ -404,6 +516,37 @@
   - 估算使用月数、剩余月份、下次维护时间和风险级别。
 
 这说明“预测分析”模块目前本质上是规则模型，不是真实 AI/时序预测服务。
+
+## 认证系统
+
+### Context
+
+`src/contexts/AuthContext.tsx`
+
+提供：
+
+- `user` — 当前用户信息
+- `token` — JWT Token
+- `loading` — 认证状态加载中
+- `login(username, password)` — 登录函数
+- `logout()` — 登出函数
+- `isAuthenticated` — 是否已认证
+
+认证流程：
+
+1. 用户在 `LoginPage` 输入用户名密码
+2. 调用 `userService.login()` 发送 POST 请求到 `/api/users/login`
+3. 后端验证密码，返回 JWT Token（24h 过期）
+4. Token 和用户信息存储到 `localStorage`
+5. 后续请求自动携带 `Authorization: Bearer <token>` 头
+6. 应用启动时自动验证已存储的 Token 有效性
+
+### 安全注意事项
+
+- 密码以**明文**存储（无 bcrypt/scrypt 哈希）
+- JWT Secret 硬编码为 `manhole-secret-key-2026`（应使用环境变量）
+- 用户 CRUD 路由**未做鉴权中间件**，任何人都可以访问
+- 登录接口对禁用账户返回 403
 
 ## 系统设置
 
@@ -491,17 +634,13 @@
 - 先确认文件真实编码。
 - 避免无意扩大乱码范围。
 
-### 3. 数据来源目前以前端模拟为主
+### 3. 数据来源已切换为后端 API
 
-虽然依赖里有：
+前端通过 `src/services/api/` 调用后端 REST API，后端数据来自 SQLite。
 
-- `axios`
-- `mqtt`
-- `socket.io-client`
-
-但当前已读主流程里没有看到真实后端接入成为主路径，系统核心仍由 mock 驱动。
-
-（mock-data 目录已于 2026-05-14 删除，所有数据来自后端 API。）
+- `REACT_APP_DATA_SOURCE=api` 时，前端优先请求真实后端
+- `REACT_APP_DATA_SOURCE=mock` 时，前端使用模拟数据（已弃用）
+- MQTT 数据到达时自动入库并通过 WebSocket 推送到前端
 
 ### 4. 高德密钥直接硬编码在源码
 
@@ -558,13 +697,14 @@ server/
 └── src/
     ├── index.js        ← Express 入口（端口 4000）
     ├── db.js           ← SQLite 初始化 + schema
-    ├── seed.js         ← 种子数据生成（30 条井盖 + 24h 实时数据）
+    ├── seed.js         ← 种子数据生成（50 条井盖 + 72h 实时数据）
     ├── routes/
     │   ├── manholes.js     ← /api/manholes
     │   ├── realtime.js     ← /api/realtime
     │   ├── alarms.js       ← /api/alarms
     │   ├── maintenance.js  ← /api/maintenance
-    │   └── stats.js        ← /api/stats
+    │   ├── stats.js        ← /api/stats
+    │   └── users.js        ← /api/users（JWT 认证）
     └── mqtt/
         └── client.js       ← MQTT 订阅（配置 MQTT_BROKER 环境变量启用）
 ```
@@ -629,6 +769,27 @@ MQTT 数据到达时自动入库并通过 WebSocket 推送到前端。
 - `maintenance_records` — 维护记录
 - `health_scores` — 健康评分历史
 - `users` — 用户管理
+
+## 环境变量配置
+
+`.env.example` 文件列出了所有支持的环境变量：
+
+```bash
+# 数据源切换
+REACT_APP_DATA_SOURCE=api          # api 或 mock
+REACT_APP_API_BASE_URL=http://localhost:4000/api
+REACT_APP_WS_URL=http://localhost:4000
+
+# 高德地图（可选，有硬编码默认值）
+REACT_APP_AMAP_API_KEY=your_amap_api_key_here
+REACT_APP_AMAP_SECURITY_KEY=your_amap_security_key_here
+REACT_APP_AMAP_SECURITY_JS_CODE=your_amap_security_js_code_here
+
+# 后端服务
+PORT=4000                          # Express 端口
+MQTT_BROKER=mqtt://localhost:1883  # MQTT Broker 地址（可选）
+JWT_SECRET=your-secret-key         # JWT 签名密钥（可选，有默认值）
+```
 
 ## 一句话总结
 

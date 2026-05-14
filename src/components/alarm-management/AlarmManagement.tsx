@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Row, Col, Card, Tabs, Button, Statistic, Badge, Progress, Space, Tooltip, Spin } from 'antd';
 import { 
   AlertOutlined, 
@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { ManholeAlarm, AlarmLevel, AlarmType } from '../../typings';
 import AlarmList from './AlarmList';
-import { fetchAlarms } from '../../services/api';
+import { fetchAlarms, resolveAlarm, acknowledgeAlarm } from '../../services/api';
 import { formatDateTime } from '../../utils';
 import ReactECharts from 'echarts-for-react';
 
@@ -46,69 +46,46 @@ const AlarmManagement: React.FC = () => {
   // 初始加载数据
   useEffect(() => {
     fetchAlarmData();
-    
-    // 设置定时刷新 - 每5分钟刷新一次，避免频繁刷新
-    const intervalId = setInterval(() => {
-      // 只对部分数据做增量更新，避免全量刷新带来的巨大差异
-      setAlarms(prevAlarms => {
-        // 随机选择1-3条告警进行状态更新
-        const updatedAlarms = [...prevAlarms];
-        const updateCount = Math.floor(Math.random() * 3) + 1;
-        
-        for (let i = 0; i < updateCount; i++) {
-          const index = Math.floor(Math.random() * updatedAlarms.length);
-          // 有20%的概率将未解决的告警标记为已解决
-          if (!updatedAlarms[index].isResolved && Math.random() < 0.2) {
-            updatedAlarms[index] = {
-              ...updatedAlarms[index],
-              isResolved: true,
-              resolvedTime: new Date().toISOString(),
-              resolvedBy: ['张工', '李工', '王工'][Math.floor(Math.random() * 3)]
-            };
-          }
-        }
-        
-        return updatedAlarms;
-      });
-      
-      // 有10%的概率从API刷新告警数据
-      if (Math.random() < 0.1) {
-        fetchAlarms().then(newAlarms => {
-          newAlarms.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-          setAlarms(newAlarms);
-        }).catch(() => {});
-      }
-    }, 300000); // 5分钟更新一次
-    
+    const intervalId = setInterval(fetchAlarmData, 300000);
     return () => clearInterval(intervalId);
   }, [fetchAlarmData]);
   
   // 处理告警确认
-  const handleAcknowledge = useCallback((alarmId: string) => {
-    setAlarms(prevAlarms => 
-      prevAlarms.map(alarm => 
-        alarm.id === alarmId 
-          ? { ...alarm, acknowledgeTime: new Date().toISOString() } 
-          : alarm
-      )
-    );
+  const handleAcknowledge = useCallback(async (alarmId: string) => {
+    try {
+      await acknowledgeAlarm(alarmId);
+      setAlarms(prevAlarms => 
+        prevAlarms.map(alarm => 
+          alarm.id === alarmId 
+            ? { ...alarm, acknowledgeTime: new Date().toISOString() } 
+            : alarm
+        )
+      );
+    } catch (error) {
+      console.error('确认告警失败:', error);
+    }
   }, []);
   
   // 处理告警解决
-  const handleResolve = useCallback((alarmId: string) => {
-    setAlarms(prevAlarms => 
-      prevAlarms.map(alarm => 
-        alarm.id === alarmId 
-          ? { 
-              ...alarm, 
-              isResolved: true, 
-              resolvedTime: new Date().toISOString(),
-              resolvedBy: '当前用户',
-              resolveNote: '人工处理'
-            } 
-          : alarm
-      )
-    );
+  const handleResolve = useCallback(async (alarmId: string) => {
+    try {
+      await resolveAlarm(alarmId);
+      setAlarms(prevAlarms => 
+        prevAlarms.map(alarm => 
+          alarm.id === alarmId 
+            ? { 
+                ...alarm, 
+                isResolved: true, 
+                resolvedTime: new Date().toISOString(),
+                resolvedBy: '当前用户',
+                resolveNote: '人工处理'
+              } 
+            : alarm
+        )
+      );
+    } catch (error) {
+      console.error('解决告警失败:', error);
+    }
   }, []);
   
   // 计算告警统计数据
@@ -124,155 +101,61 @@ const AlarmManagement: React.FC = () => {
   };
 
   // 告警趋势图表配置
-  const alarmTrendOption = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
-    },
-    legend: {
-      data: ['紧急', '严重', '警告', '提醒', '信息'],
-      textStyle: {
-        color: 'rgba(255, 255, 255, 0.65)'
-      }
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: [
-      {
-        type: 'category',
-        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-        axisLabel: {
-          color: 'rgba(255, 255, 255, 0.65)'
-        }
-      }
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        axisLabel: {
-          color: 'rgba(255, 255, 255, 0.65)'
-        }
-      }
-    ],
-    series: [
-      {
-        name: '紧急',
-        type: 'bar',
-        stack: '总量',
-        emphasis: {
-          focus: 'series'
-        },
-        data: [2, 1, 3, 0, 2, 1, 2],
-        itemStyle: {
-          color: '#ff4d4f'
-        }
-      },
-      {
-        name: '严重',
-        type: 'bar',
-        stack: '总量',
-        emphasis: {
-          focus: 'series'
-        },
-        data: [3, 4, 2, 3, 1, 2, 3],
-        itemStyle: {
-          color: '#fa8c16'
-        }
-      },
-      {
-        name: '警告',
-        type: 'bar',
-        stack: '总量',
-        emphasis: {
-          focus: 'series'
-        },
-        data: [4, 3, 5, 6, 5, 3, 2],
-        itemStyle: {
-          color: '#faad14'
-        }
-      },
-      {
-        name: '提醒',
-        type: 'bar',
-        stack: '总量',
-        emphasis: {
-          focus: 'series'
-        },
-        data: [5, 6, 4, 3, 4, 3, 4],
-        itemStyle: {
-          color: '#52c41a'
-        }
-      },
-      {
-        name: '信息',
-        type: 'bar',
-        stack: '总量',
-        emphasis: {
-          focus: 'series'
-        },
-        data: [7, 5, 6, 8, 6, 7, 5],
-        itemStyle: {
-          color: '#1890ff'
-        }
-      }
-    ]
-  };
+  const alarmTrendOption = useMemo(() => {
+    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const counts: Record<string, number[]> = { '紧急': [0,0,0,0,0,0,0], '严重': [0,0,0,0,0,0,0], '警告': [0,0,0,0,0,0,0], '提醒': [0,0,0,0,0,0,0], '信息': [0,0,0,0,0,0,0] };
+    alarms.forEach(a => {
+      const d = new Date(a.time);
+      const dayIdx = d.getDay();
+      const level = a.level === AlarmLevel.Emergency ? '紧急' : a.level === AlarmLevel.Alert ? '严重' : a.level === AlarmLevel.Warning ? '警告' : a.level === AlarmLevel.Notice ? '提醒' : '信息';
+      if (counts[level]) counts[level][dayIdx]++;
+    });
+    return {
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      legend: { data: ['紧急', '严重', '警告', '提醒', '信息'], textStyle: { color: 'rgba(255, 255, 255, 0.65)' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: [{ type: 'category', data: dayNames, axisLabel: { color: 'rgba(255, 255, 255, 0.65)' } }],
+      yAxis: [{ type: 'value', axisLabel: { color: 'rgba(255, 255, 255, 0.65)' } }],
+      series: [
+        { name: '紧急', type: 'bar', stack: '总量', data: counts['紧急'], itemStyle: { color: '#ff4d4f' } },
+        { name: '严重', type: 'bar', stack: '总量', data: [0,0,0,0,0,0,0], itemStyle: { color: '#fa8c16' } },
+        { name: '警告', type: 'bar', stack: '总量', data: counts['警告'], itemStyle: { color: '#faad14' } },
+        { name: '提醒', type: 'bar', stack: '总量', data: counts['提醒'], itemStyle: { color: '#52c41a' } },
+        { name: '信息', type: 'bar', stack: '总量', data: [0,0,0,0,0,0,0], itemStyle: { color: '#1890ff' } },
+      ]
+    };
+  }, [alarms]);
 
   // 告警类型饼图配置
-  const alarmTypeOption = {
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    legend: {
-      top: '5%',
-      left: 'center',
-      textStyle: {
-        color: 'rgba(255, 255, 255, 0.65)'
-      }
-    },
-    series: [
-      {
-        name: '告警类型',
-        type: 'pie',
-        radius: ['40%', '70%'],
+  const alarmTypeOption = useMemo(() => {
+    const typeMap: Record<string, { value: number; color: string }> = {
+      [AlarmType.WaterLevel]: { value: 0, color: '#1890ff' },
+      [AlarmType.GasLevel]: { value: 0, color: '#52c41a' },
+      [AlarmType.Temperature]: { value: 0, color: '#faad14' },
+      [AlarmType.BatteryLow]: { value: 0, color: '#fa8c16' },
+      [AlarmType.CoverOpen]: { value: 0, color: '#ff4d4f' },
+      [AlarmType.Tilt]: { value: 0, color: '#8c8c8c' },
+    };
+    alarms.forEach(a => {
+      if (typeMap[a.type]) typeMap[a.type].value++;
+    });
+    const data = Object.entries(typeMap).filter(([_, v]) => v.value > 0).map(([k, v]) => ({
+      value: v.value, name: k, itemStyle: { color: v.color }
+    }));
+    return {
+      tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+      legend: { top: '5%', left: 'center', textStyle: { color: 'rgba(255, 255, 255, 0.65)' } },
+      series: [{
+        name: '告警类型', type: 'pie', radius: ['40%', '70%'],
         avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: '#041527',
-          borderWidth: 2
-        },
-        label: {
-          show: false,
-          position: 'center'
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 14,
-            fontWeight: 'bold'
-          }
-        },
-        labelLine: {
-          show: false
-        },
-        data: [
-          { value: 35, name: '水位异常', itemStyle: { color: '#1890ff' } },
-          { value: 25, name: '气体浓度异常', itemStyle: { color: '#52c41a' } },
-          { value: 20, name: '温度异常', itemStyle: { color: '#faad14' } },
-          { value: 10, name: '电池电量低', itemStyle: { color: '#fa8c16' } },
-          { value: 5, name: '井盖开启', itemStyle: { color: '#ff4d4f' } },
-          { value: 5, name: '其他', itemStyle: { color: '#8c8c8c' } }
-        ]
-      }
-    ]
-  };
+        itemStyle: { borderRadius: 10, borderColor: '#041527', borderWidth: 2 },
+        label: { show: false, position: 'center' },
+        emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+        labelLine: { show: false },
+        data: data.length > 0 ? data : [{ value: 1, name: '暂无数据', itemStyle: { color: '#8c8c8c' } }]
+      }]
+    };
+  }, [alarms]);
   
   return (
     <div className="alarm-management-container">

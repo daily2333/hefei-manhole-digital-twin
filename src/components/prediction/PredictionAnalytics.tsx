@@ -20,7 +20,7 @@ import {
   BarChartOutlined,
   InfoCircleOutlined 
 } from '@ant-design/icons';
-import { ManholeInfo, ManholeAlarm } from '../../typings'; 
+import { ManholeInfo, ManholeAlarm, ManholeRealTimeData } from '../../typings'; 
 import PredictionChart from '../dashboard/PredictionChart';
 import HefeiManholeScene from '../3d-visualization/HefeiManholeScene';
 import dayjs from 'dayjs';
@@ -30,7 +30,8 @@ const { RangePicker } = DatePicker;
 
 interface PredictionAnalyticsProps { 
   manholes?: ManholeInfo[]; 
-  alarms?: ManholeAlarm[]; 
+  alarms?: ManholeAlarm[];
+  realTimeDataMap?: Map<string, ManholeRealTimeData>;
 }
 
 // 预测分析类型
@@ -43,7 +44,8 @@ enum PredictionType {
 
 const PredictionAnalytics: React.FC<PredictionAnalyticsProps> = ({ 
   manholes = [], 
-  alarms = [] 
+  alarms = [],
+  realTimeDataMap = new Map()
 }) => {
   const [selectedManholeId, setSelectedManholeId] = useState<string>('');
   const [predictionType, setPredictionType] = useState<PredictionType>(PredictionType.TREND);
@@ -71,25 +73,6 @@ const PredictionAnalytics: React.FC<PredictionAnalyticsProps> = ({
 
   // 渲染3D预测场景
   const render3DPrediction = () => {
-    // 创建一个虚拟的实时数据Map
-    const realTimeDataMap = new Map();
-    
-    // 为每个井盖添加一些随机数据
-    manholes.forEach(manhole => {
-      realTimeDataMap.set(manhole.id, {
-        temperature: Math.round(15 + Math.random() * 20),
-        waterLevel: Math.round(10 + Math.random() * 90),
-        gasConcentration: {
-          ch4: Math.round(10 + Math.random() * 90),
-          co: Math.round(5 + Math.random() * 15),
-          h2s: Math.round(1 + Math.random() * 8),
-          o2: Math.round(18 + Math.random() * 3)
-        },
-        coverStatus: Math.random() > 0.8 ? 1 : 0,
-        timestamp: new Date().toISOString()
-      });
-    });
-    
     return (
       <div style={{ height: 'calc(100vh - 300px)', position: 'relative' }}>
         <Alert

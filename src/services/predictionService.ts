@@ -1,48 +1,9 @@
 import { ManholeRealTimeData, ManholeInfo, ManholeStatus } from '../typings';
+import { fetchRealtimeHistory } from './api/manholeService';
 
 interface HistoricalDataPoint {
   timestamp: string;
   value: number;
-}
-
-function generateHistoricalData(
-  _manholeId: string,
-  dataType: 'temperature' | 'humidity' | 'gasConcentration' | 'waterLevel' | 'batteryLevel',
-  startTime: string,
-  endTime: string
-): HistoricalDataPoint[] {
-  const start = new Date(startTime).getTime();
-  const end = new Date(endTime).getTime();
-  const hours = Math.max(1, Math.floor((end - start) / (60 * 60 * 1000)));
-
-  const baseValues: Record<string, { base: number; amp: number; min: number; max: number }> = {
-    temperature: { base: 25, amp: 8, min: -5, max: 55 },
-    humidity: { base: 60, amp: 20, min: 10, max: 100 },
-    gasConcentration: { base: 5, amp: 10, min: 0, max: 100 },
-    waterLevel: { base: 15, amp: 15, min: 0, max: 200 },
-    batteryLevel: { base: 85, amp: 10, min: 0, max: 100 },
-  };
-
-  const config = baseValues[dataType];
-  const seed = _manholeId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-
-  function pseudoRandom(offset: number): number {
-    const x = Math.sin(seed * 12.9898 + offset * 78.233) * 43758.5453;
-    return x - Math.floor(x);
-  }
-
-  return Array.from({ length: hours }, (_, i) => {
-    const hour = i % 24;
-    const dayCycle = Math.sin((hour - 6) * Math.PI / 12);
-    const trend = Math.sin(i * 0.1) * 3;
-    const noise = (pseudoRandom(i) - 0.5) * 2;
-    let value = config.base + dayCycle * config.amp * 0.5 + trend + noise * 3;
-    value = Math.max(config.min, Math.min(config.max, value));
-    return {
-      timestamp: new Date(start + i * 3600000).toISOString(),
-      value: Math.round(value * 100) / 100,
-    };
-  });
 }
 
 function simpleLinearRegression(data: number[]): { slope: number; intercept: number } {
@@ -63,41 +24,56 @@ function predictFutureValues(data: number[], steps: number): number[] {
   return Array.from({ length: steps }, (_, i) => slope * (n + i) + intercept);
 }
 
+function extractMetric(data: ManholeRealTimeData, metric: string): number {
+  switch (metric) {
+    case 'temperature': return data.temperature;
+    case 'humidity': return data.humidity;
+    case 'waterLevel': return data.waterLevel;
+    case 'batteryLevel': return data.batteryLevel;
+    case 'gasConcentration': return data.gasConcentration.ch4;
+    default: return 0;
+  }
+}
+
 export class PredictionService {
-  predictFutureTrend(
+  async predictFutureTrend(
     manholeId: string,
     dataType: 'temperature' | 'humidity' | 'gasConcentration' | 'waterLevel' | 'batteryLevel'
-  ): { timestamp: string; value: number; isActual: boolean }[] {
-    const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000);
-    const historicalData = generateHistoricalData(manholeId, dataType, startTime.toISOString(), endTime.toISOString());
+  ): Promise<{ timestamp: string; value: number; isActual: boolean }[]> {
+    const historyData = await fetchRealtimeHistory(manholeId, 48);
+    const historicalData: HistoricalDataPoint[] = historyData.map(d => ({
+      timestamp: d.timestamp,
+      value: extractMetric(d, dataType)
+    }));
     const values = historicalData.map((item) => item.value);
     const predictions = predictFutureValues(values, 24);
     const result = historicalData.map((item) => ({ ...item, isActual: true }));
     const lastTime = new Date(historicalData[historicalData.length - 1].timestamp);
     for (let i = 0; i < predictions.length; i++) {
       const t = new Date(lastTime.getTime() + (i + 1) * 60 * 60 * 1000);
-      result.push({ timestamp: t.toISOString(), value: predictions[i], isActual: false });
+      result.push({ timestamp: t.toISOString(), value: Math.round(predictions[i] * 100) / 100, isActual: false });
     }
     return result;
   }
 
-  detectDataAnomalies(
+  async detectDataAnomalies(
     manholeId: string,
     dataType: 'temperature' | 'humidity' | 'gasConcentration' | 'waterLevel' | 'batteryLevel'
-  ): {
+  ): Promise<{
     anomalies: { timestamp: string; value: number; zScore: number }[];
     riskLevel: 'low' | 'medium' | 'high';
-  } {
-    const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - 48 * 60 * 60 * 1000);
-    const historicalData = generateHistoricalData(manholeId, dataType, startTime.toISOString(), endTime.toISOString());
+  }> {
+    const historyData = await fetchRealtimeHistory(manholeId, 100);
+    const historicalData: HistoricalDataPoint[] = historyData.map(d => ({
+      timestamp: d.timestamp,
+      value: extractMetric(d, dataType)
+    }));
     const values = historicalData.map((d) => d.value);
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
     const std = Math.sqrt(values.reduce((sq, v) => sq + (v - mean) ** 2, 0) / values.length) || 1;
     const anomalies = historicalData
       .filter((d) => Math.abs((d.value - mean) / std) > 2)
-      .map((d) => ({ timestamp: d.timestamp, value: d.value, zScore: Math.abs((d.value - mean) / std) }));
+      .map((d) => ({ timestamp: d.timestamp, value: Math.round(d.value * 100) / 100, zScore: Math.round(Math.abs((d.value - mean) / std) * 100) / 100 }));
     const maxZ = Math.max(...anomalies.map((a) => a.zScore), 0);
     const riskLevel: 'low' | 'medium' | 'high' = maxZ > 3.5 ? 'high' : maxZ > 2.5 ? 'medium' : 'low';
     return { anomalies, riskLevel };

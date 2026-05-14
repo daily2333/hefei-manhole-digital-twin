@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { App } from 'antd';
 import './index.css';
 import AppWithRoutes from './AppWithRoutes';
 import reportWebVitals from './reportWebVitals';
@@ -23,7 +24,9 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <SettingsProvider>
-        <AppWithRoutes />
+        <App>
+          <AppWithRoutes />
+        </App>
       </SettingsProvider>
     </ErrorBoundary>
   </React.StrictMode>

@@ -21,12 +21,13 @@ import {
   SearchOutlined
 } from '@ant-design/icons';
 import { ErrorBoundary } from '../layout/ErrorBoundary';
+import { useAuth } from '../../contexts/AuthContext';
 
 const DashboardTab = lazy(() => import('./DashboardTab'));
 const ManholeSceneWrapper = lazy(() => import('../3d-visualization/ManholeSceneWrapper'));
 
 const UserManagement = lazy(() => import('../user-management/UserManagement'));
-const AlarmList = lazy(() => import('../alarm-management/AlarmList'));
+const AlarmManagement = lazy(() => import('../alarm-management/AlarmManagement'));
 const MaintenanceManagement = lazy(() => import('../maintenance/MaintenanceManagement'));
 const DeviceManagement = lazy(() => import('../device-management/DeviceManagement'));
 const EnvironmentData = lazy(() => import('../environment/EnvironmentData'));
@@ -80,6 +81,9 @@ const MainContent: React.FC<MainContentProps> = ({
   onRefresh,
   performanceScore
 }) => {
+  const { user } = useAuth();
+  const userRole = user?.role || 'viewer';
+
   const handleSelectManholeById = useCallback((manholeId: string) => {
     const manhole = manholes.find((item) => item.id === manholeId);
     if (manhole) {
@@ -99,100 +103,116 @@ const MainContent: React.FC<MainContentProps> = ({
     []
   );
 
-  const tabItems = useMemo(() => [
-    {
-      key: 'dashboard',
-      label: <span><DashboardOutlined /> 综合仪表盘</span>,
-      children: wrapLazyTab(
-        <DashboardTab
-          manholes={manholes}
-          alarms={alarms}
-          selectedManhole={selectedManhole}
-          realTimeDataMap={realTimeDataMap}
-          onSelectManhole={onSelectManhole}
-          loading={loading}
-          healthScoreCard={healthScoreCard}
-          onRefresh={onRefresh}
-          performanceScore={performanceScore}
-        />
-      )
-    },
-    {
-      key: 'visualization',
-      label: <span><VideoCameraOutlined /> 3D可视化</span>,
-      children: wrapLazyTab(
-        <ManholeSceneWrapper
-          manholes={manholes}
-          realTimeDataMap={realTimeDataMap}
-          onSelectManhole={handleSelectManholeById}
-          selectedManholeId={selectedManhole?.id}
-        />
-      )
-    },
+  const tabItems = useMemo(() => {
+    const allTabs = [
+      {
+        key: 'dashboard',
+        label: <span><DashboardOutlined /> 综合仪表盘</span>,
+        roles: ['admin', 'operator', 'viewer'],
+        children: wrapLazyTab(
+          <DashboardTab
+            manholes={manholes}
+            alarms={alarms}
+            selectedManhole={selectedManhole}
+            realTimeDataMap={realTimeDataMap}
+            onSelectManhole={onSelectManhole}
+            loading={loading}
+            healthScoreCard={healthScoreCard}
+            onRefresh={onRefresh}
+            performanceScore={performanceScore}
+          />
+        )
+      },
+      {
+        key: 'visualization',
+        label: <span><VideoCameraOutlined /> 3D可视化</span>,
+        roles: ['admin', 'operator', 'viewer'],
+        children: wrapLazyTab(
+          <ManholeSceneWrapper
+            manholes={manholes}
+            realTimeDataMap={realTimeDataMap}
+            onSelectManhole={handleSelectManholeById}
+            selectedManholeId={selectedManhole?.id}
+          />
+        )
+      },
+      {
+        key: 'alarms',
+        label: (
+          <span>
+            <AlertOutlined /> 告警管理
+            {unresolvedAlarmCount > 0 && (
+              <span className="tab-badge">{unresolvedAlarmCount}</span>
+            )}
+          </span>
+        ),
+        roles: ['admin', 'operator'],
+        children: wrapLazyTab(<AlarmManagement />)
+      },
+      {
+        key: 'maintenance',
+        label: <span><ToolOutlined /> 维护记录</span>,
+        roles: ['admin', 'operator'],
+        children: wrapLazyTab(<MaintenanceManagement />)
+      },
+      {
+        key: 'devices',
+        label: <span><AppstoreOutlined /> 设备管理</span>,
+        roles: ['admin', 'operator'],
+        children: wrapLazyTab(<DeviceManagement />)
+      },
+      {
+        key: 'analytics',
+        label: <span><BarChartOutlined /> 数据分析</span>,
+        roles: ['admin', 'operator', 'viewer'],
+        children: wrapLazyTab(<DataAnalytics manholes={manholes} alarms={alarms} />)
+      },
+      {
+        key: 'prediction',
+        label: <span><PieChartOutlined /> 预测分析</span>,
+        roles: ['admin', 'operator'],
+        children: wrapLazyTab(<PredictionAnalytics manholes={manholes} alarms={alarms} realTimeDataMap={realTimeDataMap} />)
+      },
+      {
+        key: 'monitoring',
+        label: <span><ClockCircleOutlined /> 实时监控</span>,
+        roles: ['admin', 'operator'],
+        children: wrapLazyTab(<RealTimeMonitoring manholes={manholes} realTimeDataMap={realTimeDataMap} alarms={alarms} />)
+      },
+      {
+        key: 'environment',
+        label: <span><CloudOutlined /> 环境数据</span>,
+        roles: ['admin', 'operator', 'viewer'],
+        children: wrapLazyTab(<EnvironmentData manholes={manholes} realTimeDataMap={realTimeDataMap} />)
+      },
+      {
+        key: 'reports',
+        label: <span><AreaChartOutlined /> 统计报表</span>,
+        roles: ['admin', 'operator', 'viewer'],
+        children: wrapLazyTab(<StatisticalReports manholes={manholes} />)
+      },
+      {
+        key: 'search',
+        label: <span><SearchOutlined /> 数据查询</span>,
+        roles: ['admin', 'operator', 'viewer'],
+        children: wrapLazyTab(<DataSearch manholes={manholes} realTimeDataMap={realTimeDataMap} />)
+      },
+      {
+        key: 'settings',
+        label: <span><SettingOutlined /> 系统设置</span>,
+        roles: ['admin'],
+        children: wrapLazyTab(<SystemSettings />)
+      },
+      {
+        key: 'users',
+        label: <span><TeamOutlined /> 用户管理</span>,
+        roles: ['admin'],
+        children: wrapLazyTab(<UserManagement />)
+      }
+    ];
 
-    {
-      key: 'alarms',
-      label: (
-        <span>
-          <AlertOutlined /> 告警管理
-          {unresolvedAlarmCount > 0 && (
-            <span className="tab-badge">{unresolvedAlarmCount}</span>
-          )}
-        </span>
-      ),
-      children: wrapLazyTab(<AlarmList alarms={alarms} />)
-    },
-    {
-      key: 'maintenance',
-      label: <span><ToolOutlined /> 维护记录</span>,
-      children: wrapLazyTab(<MaintenanceManagement />)
-    },
-    {
-      key: 'devices',
-      label: <span><AppstoreOutlined /> 设备管理</span>,
-      children: wrapLazyTab(<DeviceManagement />)
-    },
-    {
-      key: 'analytics',
-      label: <span><BarChartOutlined /> 数据分析</span>,
-      children: wrapLazyTab(<DataAnalytics manholes={manholes} alarms={alarms} />)
-    },
-    {
-      key: 'prediction',
-      label: <span><PieChartOutlined /> 预测分析</span>,
-      children: wrapLazyTab(<PredictionAnalytics manholes={manholes} alarms={alarms} />)
-    },
-    {
-      key: 'monitoring',
-      label: <span><ClockCircleOutlined /> 实时监控</span>,
-      children: wrapLazyTab(<RealTimeMonitoring manholes={manholes} realTimeDataMap={realTimeDataMap} />)
-    },
-    {
-      key: 'environment',
-      label: <span><CloudOutlined /> 环境数据</span>,
-      children: wrapLazyTab(<EnvironmentData manholes={manholes} realTimeDataMap={realTimeDataMap} />)
-    },
-    {
-      key: 'reports',
-      label: <span><AreaChartOutlined /> 统计报表</span>,
-      children: wrapLazyTab(<StatisticalReports manholes={manholes} />)
-    },
-    {
-      key: 'search',
-      label: <span><SearchOutlined /> 数据查询</span>,
-      children: wrapLazyTab(<DataSearch manholes={manholes} realTimeDataMap={realTimeDataMap} />)
-    },
-    {
-      key: 'settings',
-      label: <span><SettingOutlined /> 系统设置</span>,
-      children: wrapLazyTab(<SystemSettings />)
-    },
-    {
-      key: 'users',
-      label: <span><TeamOutlined /> 用户管理</span>,
-      children: wrapLazyTab(<UserManagement />)
-    }
-  ], [
+    return allTabs.filter(tab => tab.roles.includes(userRole));
+  }, [
     alarms,
     handleSelectManholeById,
     healthScoreCard,
@@ -204,6 +224,7 @@ const MainContent: React.FC<MainContentProps> = ({
     realTimeDataMap,
     selectedManhole,
     unresolvedAlarmCount,
+    userRole,
     wrapLazyTab
   ]);
 

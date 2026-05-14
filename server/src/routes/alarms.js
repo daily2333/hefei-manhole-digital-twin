@@ -34,4 +34,10 @@ router.put('/:id/resolve', (req, res) => {
   res.json({ success: true });
 });
 
+router.put('/:id/acknowledge', (req, res) => {
+  const db = getDb();
+  db.prepare("UPDATE alarms SET confirmed_at = datetime('now') WHERE id = ?").run(req.params.id);
+  res.json({ success: true });
+});
+
 module.exports = router;

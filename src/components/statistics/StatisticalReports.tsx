@@ -1,53 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Select, 
-  Button, 
-  DatePicker, 
-  Space, 
-  Table, 
-  Divider,
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Card,
+  Row,
+  Col,
+  Select,
+  Button,
+  DatePicker,
+  Space,
+  Table,
   Radio,
   Tag,
   Tooltip,
+  Statistic,
+  Alert,
+  Spin,
 } from 'antd';
 import {
   AreaChartOutlined,
   ReloadOutlined,
   PrinterOutlined,
   PieChartOutlined,
-  BarChartOutlined,
   FileExcelOutlined,
   FilePdfOutlined,
-  LineChartOutlined
+  LineChartOutlined,
+  WarningOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
-import { ManholeInfo, AlarmLevel } from '../../typings';
-
-// 模拟图表组件
-const Chart: React.FC<{ type: string, data: any, height?: number }> = ({ type, data, height = 300 }) => {
-  return (
-    <div 
-      style={{ 
-        height: height, 
-        background: '#f0f2f5', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        borderRadius: '4px'
-      }}
-    >
-      {type === 'bar' && <BarChartOutlined style={{ fontSize: 36, opacity: 0.5 }} />}
-      {type === 'line' && <LineChartOutlined style={{ fontSize: 36, opacity: 0.5 }} />}
-      {type === 'pie' && <PieChartOutlined style={{ fontSize: 36, opacity: 0.5 }} />}
-      <div style={{ marginLeft: 10 }}>
-        <p style={{ margin: 0 }}>{data.title || '统计图表'}</p>
-        <p style={{ margin: 0, fontSize: 12, color: '#999' }}>数据点: {data?.points?.length || 0}</p>
-      </div>
-    </div>
-  );
-};
+import ReactECharts from 'echarts-for-react';
+import { fetchReportData, ReportData } from '../../services/api/analyticsService';
+import { fetchOverview } from '../../services/api/statsService';
+import { ManholeInfo } from '../../typings';
 
 interface StatisticalReportsProps {
   manholes?: ManholeInfo[];
@@ -56,638 +39,536 @@ interface StatisticalReportsProps {
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-
-// 报表类型
 enum ReportType {
   DAILY = 'daily',
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
 }
 
-// 统计维度
 enum StatDimension {
   DEVICE = 'device',
   AREA = 'area',
   STATUS = 'status',
   ALARM = 'alarm',
-  MAINTENANCE = 'maintenance'
+  MAINTENANCE = 'maintenance',
 }
 
-interface ChartData {
-  title: string;
-  points: any[];
-}
+const dayMap: Record<ReportType, number | null> = {
+  [ReportType.DAILY]: 1,
+  [ReportType.WEEKLY]: 7,
+  [ReportType.MONTHLY]: 30,
+  [ReportType.CUSTOM]: null,
+};
 
-/**
- * 统计报表组件
- */
-const StatisticalReports: React.FC<StatisticalReportsProps> = ({
-  manholes = []
-}) => {
+const levelColorMap: Record<string, string> = {
+  info: 'blue',
+  notice: 'orange',
+  warning: 'red',
+  alert: 'purple',
+  emergency: 'magenta',
+};
+
+const levelLabelMap: Record<string, string> = {
+  info: '低',
+  notice: '中',
+  warning: '高',
+  alert: '严重',
+  emergency: '紧急',
+};
+
+const StatisticalReports: React.FC<StatisticalReportsProps> = () => {
   const [loading, setLoading] = useState(false);
-  const [reportType, setReportType] = useState<ReportType>(ReportType.DAILY);
+  const [error, setError] = useState<string | null>(null);
+  const [reportType, setReportType] = useState<ReportType>(ReportType.WEEKLY);
   const [timeRange, setTimeRange] = useState<[Date, Date]>([
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    new Date()
+    new Date(),
   ]);
   const [dimension, setDimension] = useState<StatDimension>(StatDimension.DEVICE);
-  const [reportData, setReportData] = useState<any[]>([]);
-  
-  // 加载数据
-  const loadData = () => {
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [overview, setOverview] = useState<{
+    totalManholes: number;
+    statusDistribution: Record<string, number>;
+    unresolvedAlarms: number;
+    pendingMaintenance: number;
+    averageHealthScore: number;
+  } | null>(null);
+
+  const loadData = async () => {
     setLoading(true);
-    setTimeout(() => {
-      // 生成模拟数据
-      const data = generateReportData();
-      setReportData(data);
+    setError(null);
+    try {
+      const days = dayMap[reportType];
+      const daysParam = days ?? Math.ceil((timeRange[1].getTime() - timeRange[0].getTime()) / (1000 * 60 * 60 * 24));
+      const [report, ov] = await Promise.all([
+        fetchReportData(daysParam),
+        fetchOverview(),
+      ]);
+      setReportData(report);
+      setOverview(ov);
+    } catch (err: any) {
+      setError(err?.message || '加载报表数据失败');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
-  
-  // 初始加载
+
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportType, timeRange, dimension]);
-  
-  // 生成模拟报表数据
-  const generateReportData = () => {
-    // 根据不同维度生成不同的报表数据
-    switch(dimension) {
-      case StatDimension.DEVICE:
-        return generateDeviceReport();
-      case StatDimension.AREA:
-        return generateAreaReport();
-      case StatDimension.STATUS:
-        return generateStatusReport();
-      case StatDimension.ALARM:
-        return generateAlarmReport();
-      case StatDimension.MAINTENANCE:
-        return generateMaintenanceReport();
-      default:
-        return [];
-    }
-  };
-  
-  // 生成设备报表
-  const generateDeviceReport = () => {
-    const data = [];
-    // 模拟设备数据
-    for (let i = 1; i <= 20; i++) {
-      const device = {
-        key: `device-${i}`,
-        deviceId: `MH-${String(i).padStart(4, '0')}`,
-        deviceName: `井盖 ${i}`,
-        area: i % 4 === 0 ? '北区' : i % 3 === 0 ? '南区' : i % 2 === 0 ? '东区' : '西区',
-        status: i % 10 === 0 ? '离线' : i % 7 === 0 ? '告警' : i % 5 === 0 ? '异常' : '正常',
-        uptime: Math.floor(Math.random() * 100) + 90, // 90-189%的在线率
-        alarmCount: Math.floor(Math.random() * 10),
-        maintenanceCount: Math.floor(Math.random() * 5),
-        batteryAvg: Math.floor(Math.random() * 30) + 70, // 70-99%的电池电量
-        lastDataTime: new Date(Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000)).toLocaleString(),
-      };
-      
-      data.push(device);
-    }
-    
-    return data;
-  };
-  
-  // 生成区域报表
-  const generateAreaReport = () => {
-    const areas = ['北区', '南区', '东区', '西区'];
-    const data = [];
-    
-    for (const area of areas) {
-      const deviceCount = Math.floor(Math.random() * 30) + 20;
-      const onlineCount = Math.floor(deviceCount * (0.8 + Math.random() * 0.2));
-      const offlineCount = deviceCount - onlineCount;
-      const alarmCount = Math.floor(Math.random() * 15);
-      
-      data.push({
-        key: area,
-        area,
-        deviceCount,
-        onlineCount,
-        offlineCount,
-        onlineRate: ((onlineCount / deviceCount) * 100).toFixed(1),
-        alarmCount,
-        maintenanceCount: Math.floor(Math.random() * 10),
-        avgResponseTime: Math.floor(Math.random() * 60) + 10, // 10-69分钟的平均响应时间
-        avgBatteryLevel: Math.floor(Math.random() * 20) + 80, // 80-99%的平均电池电量
-      });
-    }
-    
-    return data;
-  };
-  
-  // 生成状态报表
-  const generateStatusReport = () => {
-    const totalDevices = 100;
-    const normalCount = Math.floor(totalDevices * (0.7 + Math.random() * 0.2));
-    const warningCount = Math.floor(totalDevices * (0.05 + Math.random() * 0.05));
-    const alarmCount = Math.floor(totalDevices * (0.03 + Math.random() * 0.07));
-    const offlineCount = totalDevices - normalCount - warningCount - alarmCount;
-    
-    return [
-      {
-        key: 'normal',
-        status: '正常',
-        count: normalCount,
-        percentage: ((normalCount / totalDevices) * 100).toFixed(1),
-        avgBatteryLevel: Math.floor(Math.random() * 10) + 85, // 85-94%的平均电池电量
-        lastWeekChange: Math.floor(Math.random() * 10) - 5, // -5至4的变化量
-      },
-      {
-        key: 'warning',
-        status: '异常',
-        count: warningCount,
-        percentage: ((warningCount / totalDevices) * 100).toFixed(1),
-        avgBatteryLevel: Math.floor(Math.random() * 15) + 70, // 70-84%的平均电池电量
-        lastWeekChange: Math.floor(Math.random() * 10) - 3, // -3至6的变化量
-      },
-      {
-        key: 'alarm',
-        status: '告警',
-        count: alarmCount,
-        percentage: ((alarmCount / totalDevices) * 100).toFixed(1),
-        avgBatteryLevel: Math.floor(Math.random() * 20) + 60, // 60-79%的平均电池电量
-        lastWeekChange: Math.floor(Math.random() * 10) - 2, // -2至7的变化量
-      },
-      {
-        key: 'offline',
-        status: '离线',
-        count: offlineCount,
-        percentage: ((offlineCount / totalDevices) * 100).toFixed(1),
-        avgBatteryLevel: Math.floor(Math.random() * 30) + 40, // 40-69%的平均电池电量
-        lastWeekChange: Math.floor(Math.random() * 10) - 4, // -4至5的变化量
-      }
-    ];
-  };
-  
-  // 生成告警报表
-  const generateAlarmReport = () => {
-    const alarmTypes = [
-      { key: 'water', name: '水位告警', level: AlarmLevel.Alert },
-      { key: 'gas', name: '气体告警', level: AlarmLevel.Emergency },
-      { key: 'battery', name: '电池告警', level: AlarmLevel.Notice },
-      { key: 'tilt', name: '倾斜告警', level: AlarmLevel.Alert },
-      { key: 'open', name: '井盖打开', level: AlarmLevel.Notice },
-      { key: 'comm', name: '通信告警', level: AlarmLevel.Info },
-    ];
-    
-    const data = [];
-    
-    for (const type of alarmTypes) {
-      const count = Math.floor(Math.random() * 50) + 10;
-      const resolvedCount = Math.floor(count * (0.5 + Math.random() * 0.3));
-      const unresolvedCount = count - resolvedCount;
-      const avgResponseTime = Math.floor(Math.random() * 120) + 30; // 30-149分钟的平均响应时间
-      
-      data.push({
-        key: type.key,
-        alarmType: type.name,
-        alarmLevel: type.level,
-        count,
-        resolvedCount,
-        unresolvedCount,
-        resolveRate: ((resolvedCount / count) * 100).toFixed(1),
-        avgResponseTime,
-        avgResolveTime: avgResponseTime + Math.floor(Math.random() * 180) + 60,
-      });
-    }
-    
-    return data;
-  };
-  
-  // 生成维护报表
-  const generateMaintenanceReport = () => {
-    const maintenanceTypes = [
-      { key: 'routine', name: '例行检查' },
-      { key: 'repair', name: '故障维修' },
-      { key: 'battery', name: '电池更换' },
-      { key: 'sensor', name: '传感器更换' },
-      { key: 'clean', name: '清理井内' },
-    ];
-    
-    const data = [];
-    
-    for (const type of maintenanceTypes) {
-      const count = Math.floor(Math.random() * 40) + 5;
-      const completedCount = Math.floor(count * (0.6 + Math.random() * 0.4));
-      const pendingCount = count - completedCount;
-      const avgDuration = Math.floor(Math.random() * 120) + 60; // 60-179分钟的平均用时
-      
-      data.push({
-        key: type.key,
-        maintenanceType: type.name,
-        count,
-        completedCount,
-        pendingCount,
-        completionRate: ((completedCount / count) * 100).toFixed(1),
-        avgDuration,
-        avgCost: Math.floor(Math.random() * 200) + 100,
-      });
-    }
-    
-    return data;
-  };
-  
-  // 获取表格列配置
-  const getColumns = () => {
-    switch(dimension) {
-      case StatDimension.DEVICE:
-        return [
-          {
-            title: '设备ID',
-            dataIndex: 'deviceId',
-            key: 'deviceId',
-            width: 120,
-          },
-          {
-            title: '设备名称',
-            dataIndex: 'deviceName',
-            key: 'deviceName',
-            width: 120,
-          },
-          {
-            title: '所属区域',
-            dataIndex: 'area',
-            key: 'area',
-            width: 100,
-          },
-          {
-            title: '设备状态',
-            dataIndex: 'status',
-            key: 'status',
-            width: 100,
-            render: (status: string) => {
-              let color = '';
-              switch(status) {
-                case '正常':
-                  color = 'green';
-                  break;
-                case '异常':
-                  color = 'orange';
-                  break;
-                case '告警':
-                  color = 'red';
-                  break;
-                case '离线':
-                  color = 'gray';
-                  break;
-                default:
-                  color = '';
-              }
-              return <Tag color={color}>{status}</Tag>;
-            }
-          },
-          {
-            title: '在线率',
-            dataIndex: 'uptime',
-            key: 'uptime',
-            width: 100,
-            render: (uptime: number) => `${uptime}%`,
-            sorter: (a: any, b: any) => a.uptime - b.uptime,
-          },
-          {
-            title: '告警次数',
-            dataIndex: 'alarmCount',
-            key: 'alarmCount',
-            width: 100,
-            sorter: (a: any, b: any) => a.alarmCount - b.alarmCount,
-          },
-          {
-            title: '维护次数',
-            dataIndex: 'maintenanceCount',
-            key: 'maintenanceCount',
-            width: 100,
-          },
-          {
-            title: '平均电量',
-            dataIndex: 'batteryAvg',
-            key: 'batteryAvg',
-            width: 100,
-            render: (battery: number) => `${battery}%`,
-          },
-          {
-            title: '最后数据时间',
-            dataIndex: 'lastDataTime',
-            key: 'lastDataTime',
-            width: 180,
-          }
-        ];
-      case StatDimension.AREA:
-        return [
-          {
-            title: '区域',
-            dataIndex: 'area',
-            key: 'area',
-            width: 100,
-          },
-          {
-            title: '设备数量',
-            dataIndex: 'deviceCount',
-            key: 'deviceCount',
-            width: 100,
-          },
-          {
-            title: '在线数量',
-            dataIndex: 'onlineCount',
-            key: 'onlineCount',
-            width: 100,
-          },
-          {
-            title: '离线数量',
-            dataIndex: 'offlineCount',
-            key: 'offlineCount',
-            width: 100,
-          },
-          {
-            title: '在线率',
-            dataIndex: 'onlineRate',
-            key: 'onlineRate',
-            width: 100,
-            render: (rate: string) => `${rate}%`,
-            sorter: (a: any, b: any) => parseFloat(a.onlineRate) - parseFloat(b.onlineRate),
-          },
-          {
-            title: '告警数量',
-            dataIndex: 'alarmCount',
-            key: 'alarmCount',
-            width: 100,
-          },
-          {
-            title: '维护次数',
-            dataIndex: 'maintenanceCount',
-            key: 'maintenanceCount',
-            width: 100,
-          },
-          {
-            title: '平均响应时间(分钟)',
-            dataIndex: 'avgResponseTime',
-            key: 'avgResponseTime',
-            width: 150,
-          },
-          {
-            title: '平均电池电量',
-            dataIndex: 'avgBatteryLevel',
-            key: 'avgBatteryLevel',
-            width: 120,
-            render: (level: number) => `${level}%`,
-          }
-        ];
-      case StatDimension.STATUS:
-        return [
-          {
-            title: '状态',
-            dataIndex: 'status',
-            key: 'status',
-            width: 100,
-            render: (status: string) => {
-              let color = '';
-              switch(status) {
-                case '正常':
-                  color = 'green';
-                  break;
-                case '异常':
-                  color = 'orange';
-                  break;
-                case '告警':
-                  color = 'red';
-                  break;
-                case '离线':
-                  color = 'gray';
-                  break;
-                default:
-                  color = '';
-              }
-              return <Tag color={color}>{status}</Tag>;
-            }
-          },
-          {
-            title: '设备数量',
-            dataIndex: 'count',
-            key: 'count',
-            width: 100,
-          },
-          {
-            title: '占比',
-            dataIndex: 'percentage',
-            key: 'percentage',
-            width: 100,
-            render: (percentage: string) => `${percentage}%`,
-          },
-          {
-            title: '平均电池电量',
-            dataIndex: 'avgBatteryLevel',
-            key: 'avgBatteryLevel',
-            width: 150,
-            render: (level: number) => `${level}%`,
-          },
-          {
-            title: '与上周变化',
-            dataIndex: 'lastWeekChange',
-            key: 'lastWeekChange',
-            width: 150,
-            render: (change: number) => {
-              if (change > 0) {
-                return <span style={{ color: 'red' }}>+{change}</span>;
-              } else if (change < 0) {
-                return <span style={{ color: 'green' }}>{change}</span>;
-              }
-              return <span>0</span>;
-            }
-          }
-        ];
-      case StatDimension.ALARM:
-        return [
-          {
-            title: '告警类型',
-            dataIndex: 'alarmType',
-            key: 'alarmType',
-            width: 120,
-          },
-          {
-            title: '告警级别',
-            dataIndex: 'alarmLevel',
-            key: 'alarmLevel',
-            width: 100,
-            render: (level: AlarmLevel) => {
-              let color = '';
-              let text = '';
-              
-              switch(level) {
-                case AlarmLevel.Info:
-                  color = 'blue';
-                  text = '低';
-                  break;
-                case AlarmLevel.Notice:
-                  color = 'orange';
-                  text = '中';
-                  break;
-                case AlarmLevel.Warning:
-                  color = 'red';
-                  text = '高';
-                  break;
-                case AlarmLevel.Emergency:
-                  color = 'purple';
-                  text = '严重';
-                  break;
-                default:
-                  color = '';
-                  text = '未知';
-              }
-              
-              return <Tag color={color}>{text}</Tag>;
-            }
-          },
-          {
-            title: '告警总数',
-            dataIndex: 'count',
-            key: 'count',
-            width: 100,
-          },
-          {
-            title: '已处理',
-            dataIndex: 'resolvedCount',
-            key: 'resolvedCount',
-            width: 100,
-          },
-          {
-            title: '未处理',
-            dataIndex: 'unresolvedCount',
-            key: 'unresolvedCount',
-            width: 100,
-          },
-          {
-            title: '处理率',
-            dataIndex: 'resolveRate',
-            key: 'resolveRate',
-            width: 100,
-            render: (rate: string) => `${rate}%`,
-          },
-          {
-            title: '平均响应时间(分钟)',
-            dataIndex: 'avgResponseTime',
-            key: 'avgResponseTime',
-            width: 150,
-          },
-          {
-            title: '平均处理时间(分钟)',
-            dataIndex: 'avgResolveTime',
-            key: 'avgResolveTime',
-            width: 150,
-          }
-        ];
-      case StatDimension.MAINTENANCE:
-        return [
-          {
-            title: '维护类型',
-            dataIndex: 'maintenanceType',
-            key: 'maintenanceType',
-            width: 120,
-          },
-          {
-            title: '总数',
-            dataIndex: 'count',
-            key: 'count',
-            width: 80,
-          },
-          {
-            title: '已完成',
-            dataIndex: 'completedCount',
-            key: 'completedCount',
-            width: 100,
-          },
-          {
-            title: '待完成',
-            dataIndex: 'pendingCount',
-            key: 'pendingCount',
-            width: 100,
-          },
-          {
-            title: '完成率',
-            dataIndex: 'completionRate',
-            key: 'completionRate',
-            width: 100,
-            render: (rate: string) => `${rate}%`,
-          },
-          {
-            title: '平均用时(分钟)',
-            dataIndex: 'avgDuration',
-            key: 'avgDuration',
-            width: 150,
-          },
-          {
-            title: '平均成本(元)',
-            dataIndex: 'avgCost',
-            key: 'avgCost',
-            width: 120,
-            render: (cost: number) => `¥${cost}`,
-          }
-        ];
-      default:
-        return [];
-    }
-  };
-  
-  // 导出报表
+  }, [reportType, dimension]);
+
   const exportReport = (type: 'excel' | 'pdf') => {
-    console.log(`导出${type === 'excel' ? 'Excel' : 'PDF'}报表`, reportData);
-    // 在实际应用中，这里会调用导出API
     alert(`导出${type === 'excel' ? 'Excel' : 'PDF'}报表成功！`);
   };
-  
-  // 打印报表
+
   const printReport = () => {
-    console.log('打印报表', reportData);
-    // 在实际应用中，这里会调用打印API
     window.print();
   };
-  
-  // 获取图表数据
-  const getChartData = () => {
-    const chartData: ChartData = {
-      title: '',
-      points: []
+
+  const statusOption = useMemo(() => {
+    if (!reportData?.statusReport) return null;
+    const { normal, warning, alarm, offline } = reportData.statusReport;
+    return {
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'item' as const, formatter: '{b}: {c} ({d}%)' },
+      legend: {
+        orient: 'vertical' as const,
+        right: 10,
+        top: 'center',
+        textStyle: { color: '#ccc' },
+      },
+      color: ['#52c41a', '#faad14', '#ff4d4f', '#8c8c8c'],
+      series: [
+        {
+          name: '设备状态',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          center: ['40%', '50%'],
+          avoidLabelOverlap: true,
+          itemStyle: { borderRadius: 4, borderColor: '#0c1b30', borderWidth: 2 },
+          label: { show: false },
+          emphasis: {
+            label: { show: true, fontSize: 14, fontWeight: 'bold' },
+          },
+          labelLine: { show: false },
+          data: [
+            { value: normal, name: '正常' },
+            { value: warning, name: '警告' },
+            { value: alarm, name: '告警' },
+            { value: offline, name: '离线' },
+          ],
+        },
+      ],
     };
-    
-    switch(dimension) {
+  }, [reportData]);
+
+  const alarmOption = useMemo(() => {
+    if (!reportData?.alarmReport?.byLevel) return null;
+    const levels = Object.entries(reportData.alarmReport.byLevel);
+    return {
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' as const } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'category' as const,
+        data: levels.map(([k]) => levelLabelMap[k] || k),
+        axisLabel: { color: '#ccc' },
+        axisLine: { lineStyle: { color: '#2a3f5d' } },
+      },
+      yAxis: {
+        type: 'value' as const,
+        axisLabel: { color: '#ccc' },
+        splitLine: { lineStyle: { color: '#1a2f4d' } },
+      },
+      color: ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1'],
+      series: [
+        {
+          name: '告警数量',
+          type: 'bar',
+          barWidth: '50%',
+          data: levels.map(([, v]) => v),
+          itemStyle: { borderRadius: [4, 4, 0, 0] },
+        },
+      ],
+    };
+  }, [reportData]);
+
+  const maintenanceOption = useMemo(() => {
+    if (!reportData?.maintenanceReport?.byType) return null;
+    const types = Object.entries(reportData.maintenanceReport.byType);
+    return {
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' as const } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'category' as const,
+        data: types.map(([k]) => k),
+        axisLabel: { color: '#ccc' },
+        axisLine: { lineStyle: { color: '#2a3f5d' } },
+      },
+      yAxis: {
+        type: 'value' as const,
+        axisLabel: { color: '#ccc' },
+        splitLine: { lineStyle: { color: '#1a2f4d' } },
+      },
+      color: ['#13c2c2'],
+      series: [
+        {
+          name: '维护数量',
+          type: 'bar',
+          barWidth: '50%',
+          data: types.map(([, v]) => v),
+          itemStyle: { borderRadius: [4, 4, 0, 0] },
+        },
+      ],
+    };
+  }, [reportData]);
+
+  const deviceColumns = [
+    { title: '设备名称', dataIndex: 'name', key: 'name', width: 140 },
+    {
+      title: '在线率',
+      dataIndex: 'uptime',
+      key: 'uptime',
+      width: 100,
+      render: (v: number) => `${v}%`,
+      sorter: (a: any, b: any) => a.uptime - b.uptime,
+    },
+    {
+      title: '告警次数',
+      dataIndex: 'alarmCount',
+      key: 'alarmCount',
+      width: 100,
+      sorter: (a: any, b: any) => a.alarmCount - b.alarmCount,
+    },
+    {
+      title: '维护次数',
+      dataIndex: 'maintenanceCount',
+      key: 'maintenanceCount',
+      width: 100,
+    },
+    {
+      title: '平均电量',
+      dataIndex: 'batteryAvg',
+      key: 'batteryAvg',
+      width: 100,
+      render: (v: number) => `${v}%`,
+    },
+    {
+      title: '最后数据时间',
+      dataIndex: 'lastDataTime',
+      key: 'lastDataTime',
+      width: 180,
+      render: (v: string) => v || 'N/A',
+    },
+  ];
+
+  const areaColumns = [
+    { title: '区域', dataIndex: 'area', key: 'area', width: 100 },
+    { title: '设备数量', dataIndex: 'deviceCount', key: 'deviceCount', width: 100 },
+    {
+      title: '在线率',
+      dataIndex: 'onlineRate',
+      key: 'onlineRate',
+      width: 100,
+      render: (v: number) => `${(v * 100).toFixed(1)}%`,
+      sorter: (a: any, b: any) => a.onlineRate - b.onlineRate,
+    },
+    { title: '告警数量', dataIndex: 'alarms', key: 'alarms', width: 100 },
+    {
+      title: '平均健康分',
+      dataIndex: 'avgHealth',
+      key: 'avgHealth',
+      width: 120,
+      render: (v: number) => (v != null ? v.toFixed(1) : 'N/A'),
+    },
+  ];
+
+  const statusColumns = [
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status: string) => {
+        const colorMap: Record<string, string> = { normal: 'green', warning: 'orange', alarm: 'red', offline: 'gray' };
+        const labelMap: Record<string, string> = { normal: '正常', warning: '警告', alarm: '告警', offline: '离线' };
+        return <Tag color={colorMap[status] || ''}>{labelMap[status] || status}</Tag>;
+      },
+    },
+    { title: '设备数量', dataIndex: 'count', key: 'count', width: 100 },
+    {
+      title: '占比',
+      dataIndex: 'percentage',
+      key: 'percentage',
+      width: 100,
+      render: (v: string) => `${v}%`,
+    },
+  ];
+
+  const alarmColumns = [
+    {
+      title: '告警级别',
+      dataIndex: 'level',
+      key: 'level',
+      width: 100,
+      render: (level: string) => (
+        <Tag color={levelColorMap[level] || ''}>{levelLabelMap[level] || level}</Tag>
+      ),
+    },
+    { title: '告警总数', dataIndex: 'count', key: 'count', width: 100 },
+  ];
+
+  const maintenanceColumns = [
+    { title: '维护类型', dataIndex: 'type', key: 'type', width: 120 },
+    { title: '总数', dataIndex: 'count', key: 'count', width: 80 },
+  ];
+
+  const getColumns = () => {
+    switch (dimension) {
       case StatDimension.DEVICE:
-        chartData.title = '设备状态分布';
-        // 简单起见，这里只是示例图表数据
-        chartData.points = reportData;
-        break;
+        return deviceColumns;
       case StatDimension.AREA:
-        chartData.title = '区域设备分布';
-        chartData.points = reportData;
-        break;
+        return areaColumns;
       case StatDimension.STATUS:
-        chartData.title = '设备状态统计';
-        chartData.points = reportData;
-        break;
+        return statusColumns;
       case StatDimension.ALARM:
-        chartData.title = '告警类型统计';
-        chartData.points = reportData;
-        break;
+        return alarmColumns;
       case StatDimension.MAINTENANCE:
-        chartData.title = '维护类型统计';
-        chartData.points = reportData;
-        break;
+        return maintenanceColumns;
+      default:
+        return [];
     }
-    
-    return chartData;
   };
-  
+
+  const getTableData = (): any[] => {
+    if (!reportData) return [];
+    switch (dimension) {
+      case StatDimension.DEVICE:
+        return reportData.deviceReport.map((d, i) => ({ ...d, key: `device-${i}` }));
+      case StatDimension.AREA:
+        return reportData.areaReport.map((a, i) => ({ ...a, key: `area-${i}` }));
+      case StatDimension.STATUS: {
+        const { normal, warning, alarm, offline } = reportData.statusReport;
+        const total = normal + warning + alarm + offline;
+        return [
+          { key: 'normal', status: 'normal', count: normal, percentage: total > 0 ? ((normal / total) * 100).toFixed(1) : '0' },
+          { key: 'warning', status: 'warning', count: warning, percentage: total > 0 ? ((warning / total) * 100).toFixed(1) : '0' },
+          { key: 'alarm', status: 'alarm', count: alarm, percentage: total > 0 ? ((alarm / total) * 100).toFixed(1) : '0' },
+          { key: 'offline', status: 'offline', count: offline, percentage: total > 0 ? ((offline / total) * 100).toFixed(1) : '0' },
+        ];
+      }
+      case StatDimension.ALARM:
+        return Object.entries(reportData.alarmReport.byLevel).map(([level, count], i) => ({
+          key: `alarm-${i}`,
+          level,
+          count,
+        }));
+      case StatDimension.MAINTENANCE:
+        return Object.entries(reportData.maintenanceReport.byType).map(([type, count], i) => ({
+          key: `maint-${i}`,
+          type,
+          count,
+        }));
+      default:
+        return [];
+    }
+  };
+
+  const renderCharts = () => {
+    if (dimension === StatDimension.STATUS && statusOption) {
+      return (
+        <Col span={24}>
+          <Row gutter={16}>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="设备总数" value={overview?.totalManholes ?? '-'} prefix={<AreaChartOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="平均电池电量" value={reportData?.statusReport.batteryAvg ?? '-'} suffix="%" prefix={<LineChartOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="平均信号强度" value={reportData?.statusReport.signalAvg ?? '-'} suffix="dBm" prefix={<PieChartOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic
+                  title="周环比变化"
+                  value={reportData?.statusReport.weekOverWeek ?? 0}
+                  precision={1}
+                  suffix="%"
+                  valueStyle={{ color: (reportData?.statusReport.weekOverWeek ?? 0) >= 0 ? '#ff4d4f' : '#52c41a' }}
+                  prefix={reportData?.statusReport.weekOverWeek != null && reportData.statusReport.weekOverWeek >= 0 ? <WarningOutlined /> : <CheckCircleOutlined />}
+                />
+              </Card>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col span={12}>
+              <Card title="设备状态分布" className="dark-card">
+                <ReactECharts option={statusOption} style={{ height: 300 }} className="react-echarts" />
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card title="状态统计明细" className="dark-card">
+                <Table
+                  dataSource={getTableData()}
+                  columns={getColumns()}
+                  rowKey="key"
+                  pagination={false}
+                  size="small"
+                />
+              </Card>
+            </Col>
+          </Row>
+        </Col>
+      );
+    }
+
+    if (dimension === StatDimension.ALARM && alarmOption) {
+      return (
+        <Col span={24}>
+          <Row gutter={16}>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="告警总数" value={reportData?.alarmReport.total ?? '-'} prefix={<WarningOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="已处理" value={reportData?.alarmReport.resolved ?? '-'} prefix={<CheckCircleOutlined />} valueStyle={{ color: '#52c41a' }} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="处理率" value={reportData?.alarmReport.resolveRate ?? '-'} suffix="%" prefix={<PieChartOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="平均响应时间" value={reportData?.alarmReport.avgResponseTime ?? '-'} suffix="分钟" prefix={<ClockCircleOutlined />} />
+              </Card>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col span={12}>
+              <Card title="告警级别分布" className="dark-card">
+                <ReactECharts option={alarmOption} style={{ height: 300 }} className="react-echarts" />
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card title="告警级别明细" className="dark-card">
+                <Table
+                  dataSource={getTableData()}
+                  columns={getColumns()}
+                  rowKey="key"
+                  pagination={false}
+                  size="small"
+                />
+              </Card>
+            </Col>
+          </Row>
+        </Col>
+      );
+    }
+
+    if (dimension === StatDimension.MAINTENANCE && maintenanceOption) {
+      return (
+        <Col span={24}>
+          <Row gutter={16}>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="维护总数" value={reportData?.maintenanceReport.total ?? '-'} prefix={<AreaChartOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="已完成" value={reportData?.maintenanceReport.completed ?? '-'} prefix={<CheckCircleOutlined />} valueStyle={{ color: '#52c41a' }} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="完成率" value={reportData?.maintenanceReport.completionRate ?? '-'} suffix="%" prefix={<PieChartOutlined />} />
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+                <Statistic title="平均用时" value={reportData?.maintenanceReport.avgDuration ?? '-'} suffix="小时" prefix={<ClockCircleOutlined />} />
+              </Card>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col span={12}>
+              <Card title="维护类型分布" className="dark-card">
+                <ReactECharts option={maintenanceOption} style={{ height: 300 }} className="react-echarts" />
+              </Card>
+            </Col>
+            <Col span={12}>
+              <Card title="维护类型明细" className="dark-card">
+                <Table
+                  dataSource={getTableData()}
+                  columns={getColumns()}
+                  rowKey="key"
+                  pagination={false}
+                  size="small"
+                />
+              </Card>
+            </Col>
+          </Row>
+        </Col>
+      );
+    }
+
+    return null;
+  };
+
+  const renderSummaryCards = () => {
+    if (!overview) return null;
+    return (
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={4}>
+          <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+            <Statistic title="井盖总数" value={overview.totalManholes} prefix={<AreaChartOutlined />} />
+          </Card>
+        </Col>
+        <Col span={5}>
+          <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+            <Statistic title="未处理告警" value={overview.unresolvedAlarms} prefix={<WarningOutlined />} valueStyle={{ color: overview.unresolvedAlarms > 0 ? '#ff4d4f' : '#52c41a' }} />
+          </Card>
+        </Col>
+        <Col span={5}>
+          <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+            <Statistic title="待处理维护" value={overview.pendingMaintenance} prefix={<ClockCircleOutlined />} valueStyle={{ color: overview.pendingMaintenance > 0 ? '#faad14' : '#52c41a' }} />
+          </Card>
+        </Col>
+        <Col span={5}>
+          <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+            <Statistic title="平均健康分" value={overview.averageHealthScore} precision={1} prefix={<PieChartOutlined />} />
+          </Card>
+        </Col>
+        <Col span={5}>
+          <Card className="dark-card" styles={{ body: { padding: 16 } }}>
+            <Statistic title="报表天数" value={dayMap[reportType] ?? '自定义'} suffix="天" prefix={<LineChartOutlined />} />
+          </Card>
+        </Col>
+      </Row>
+    );
+  };
+
   return (
     <Card
       title={<><AreaChartOutlined /> 统计报表</>}
       extra={
         <Space>
-          <Radio.Group 
-            value={reportType} 
+          <Radio.Group
+            value={reportType}
             onChange={(e) => setReportType(e.target.value)}
             buttonStyle="solid"
           >
@@ -696,9 +577,9 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
             <Radio.Button value={ReportType.MONTHLY}>月报表</Radio.Button>
             <Radio.Button value={ReportType.CUSTOM}>自定义</Radio.Button>
           </Radio.Group>
-          
+
           {reportType === ReportType.CUSTOM && (
-            <RangePicker 
+            <RangePicker
               onChange={(dates) => {
                 if (dates && dates[0] && dates[1]) {
                   setTimeRange([dates[0].toDate(), dates[1].toDate()]);
@@ -706,7 +587,7 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
               }}
             />
           )}
-          
+
           <Select
             value={dimension}
             onChange={setDimension}
@@ -718,35 +599,35 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
             <Option value={StatDimension.ALARM}>告警维度</Option>
             <Option value={StatDimension.MAINTENANCE}>维护维度</Option>
           </Select>
-          
-          <Button 
-            icon={<ReloadOutlined />} 
+
+          <Button
+            icon={<ReloadOutlined />}
             onClick={loadData}
             loading={loading}
           >
             刷新
           </Button>
-          
+
           <Tooltip title="导出为Excel">
-            <Button 
+            <Button
               icon={<FileExcelOutlined />}
               onClick={() => exportReport('excel')}
             >
               Excel
             </Button>
           </Tooltip>
-          
+
           <Tooltip title="导出为PDF">
-            <Button 
+            <Button
               icon={<FilePdfOutlined />}
               onClick={() => exportReport('pdf')}
             >
               PDF
             </Button>
           </Tooltip>
-          
+
           <Tooltip title="打印报表">
-            <Button 
+            <Button
               icon={<PrinterOutlined />}
               onClick={printReport}
             >
@@ -756,46 +637,43 @@ const StatisticalReports: React.FC<StatisticalReportsProps> = ({
         </Space>
       }
     >
-      <Card title={`${
-        reportType === ReportType.DAILY ? '日报表' : 
-        reportType === ReportType.WEEKLY ? '周报表' : 
-        reportType === ReportType.MONTHLY ? '月报表' : '自定义报表'
-      } - ${
-        dimension === StatDimension.DEVICE ? '设备维度' : 
-        dimension === StatDimension.AREA ? '区域维度' : 
-        dimension === StatDimension.STATUS ? '状态维度' : 
-        dimension === StatDimension.ALARM ? '告警维度' : '维护维度'
-      }`}>
-        <Row gutter={[16, 16]}>
-          <Col span={24}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Chart type="bar" data={getChartData()} height={250} />
+      <Spin spinning={loading}>
+        {error ? (
+          <Alert message="加载失败" description={error} type="error" showIcon style={{ marginBottom: 16 }} />
+        ) : null}
+
+        {renderSummaryCards()}
+
+        <Card
+          title={`${
+            reportType === ReportType.DAILY ? '日报表' :
+            reportType === ReportType.WEEKLY ? '周报表' :
+            reportType === ReportType.MONTHLY ? '月报表' : '自定义报表'
+          } - ${
+            dimension === StatDimension.DEVICE ? '设备维度' :
+            dimension === StatDimension.AREA ? '区域维度' :
+            dimension === StatDimension.STATUS ? '状态维度' :
+            dimension === StatDimension.ALARM ? '告警维度' : '维护维度'
+          }`}
+        >
+          <Row gutter={[16, 16]}>
+            {dimension === StatDimension.DEVICE || dimension === StatDimension.AREA ? (
+              <Col span={24}>
+                <Table
+                  dataSource={getTableData()}
+                  columns={getColumns()}
+                  rowKey="key"
+                  pagination={{ pageSize: 10 }}
+                />
               </Col>
-              <Col span={8}>
-                <Chart type="pie" data={getChartData()} height={250} />
-              </Col>
-              <Col span={8}>
-                <Chart type="line" data={getChartData()} height={250} />
-              </Col>
-            </Row>
-          </Col>
-          
-          <Col span={24}>
-            <Divider orientation="left">报表数据</Divider>
-            
-            <Table 
-              dataSource={reportData} 
-              columns={getColumns()}
-              rowKey="key"
-              pagination={{ pageSize: 10 }}
-              loading={loading}
-            />
-          </Col>
-        </Row>
-      </Card>
+            ) : null}
+
+            {renderCharts()}
+          </Row>
+        </Card>
+      </Spin>
     </Card>
   );
 };
 
-export default StatisticalReports; 
+export default StatisticalReports;

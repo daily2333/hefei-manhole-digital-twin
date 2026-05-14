@@ -26,7 +26,7 @@ import {
   DisconnectOutlined,
   MonitorOutlined
 } from '@ant-design/icons';
-import { ManholeInfo, ManholeRealTimeData, ManholeStatus, CoverStatus } from '../../typings';
+import { ManholeInfo, ManholeRealTimeData, ManholeAlarm, ManholeStatus, CoverStatus, AlarmType, AlarmLevel } from '../../typings';
 import { Line } from '@ant-design/charts';
 
 
@@ -34,6 +34,7 @@ import { Line } from '@ant-design/charts';
 interface RealTimeMonitoringProps {
   manholes?: ManholeInfo[];
   realTimeDataMap?: Map<string, ManholeRealTimeData>;
+  alarms?: ManholeAlarm[];
 }
 
 const { Option } = Select;
@@ -261,7 +262,8 @@ const DetailMonitoringPanel = React.memo(({ selectedDevice, chartData }: DetailM
  */
 const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   manholes = [],
-  realTimeDataMap = new Map()
+  realTimeDataMap = new Map(),
+  alarms = []
 }) => {
   const [selectedManholeId, setSelectedManholeId] = useState<string | null>(null);
   const [displayedDevices, setDisplayedDevices] = useState<ManholeInfo[]>([]);
@@ -532,7 +534,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   // 优化设备状态面板渲染，使用memo组件替代函数
   const updateDisplayedDevices = useCallback(() => {
     setDisplayedDevices(manholes.filter(device => 
-      device.location.district.includes(selectedAreaFilter)
+      selectedAreaFilter === 'all' || (device.location.district || '').includes(selectedAreaFilter)
     ));
   }, [manholes, selectedAreaFilter]);
 
@@ -553,43 +555,28 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
     updateDisplayedDevices();
   }, [updateDisplayedDevices]);
 
-  // 生成模拟的实时事件日志
+  // 基于真实告警数据生成事件日志
   const generateEventLog = useCallback(() => {
-    const events = [
-      '设备数据更新',
-      '电池电量检测',
-      '水位读数',
-      '气体浓度读数',
-      '通信状态检查',
-      '倾斜度测量',
-      '井盖状态检测',
-      '传感器自检'
-    ];
-    
-    const statusTypes = [
-      { text: '正常', type: 'success' },
-      { text: '警告', type: 'warning' },
-      { text: '错误', type: 'error' },
-      { text: '信息', type: 'info' }
-    ];
-    
-    // 随机生成一个事件
-    const randomEvent = events[Math.floor(Math.random() * events.length)];
-    const randomStatus = statusTypes[Math.floor(Math.random() * statusTypes.length)];
-    
-    // 创建新事件
-    const newEvent = {
-      time: new Date().toISOString(),
-      event: randomEvent,
-      device: manholes[Math.floor(Math.random() * manholes.length)]?.id || '未知设备',
-      deviceName: manholes[Math.floor(Math.random() * manholes.length)]?.name || '未知设备',
-      status: randomStatus.text,
-      type: randomStatus.type
-    };
-    
-    // 更新事件日志 (保留最近20条)
-    setEventLog(prevLogs => [newEvent, ...prevLogs].slice(0, 20));
-  }, [manholes]);
+    if (alarms.length === 0) return;
+    const recentAlarms = alarms.slice(0, 20);
+    const logs = recentAlarms.map(alarm => {
+      const manhole = manholes.find(m => m.id === alarm.manholeId);
+      return {
+        time: alarm.time,
+        event: alarm.type === AlarmType.WaterLevel ? '水位异常' :
+               alarm.type === AlarmType.Temperature ? '温度异常' :
+               alarm.type === AlarmType.BatteryLow ? '电池低电量' :
+               alarm.type === AlarmType.GasLevel ? '气体浓度异常' :
+               alarm.type === AlarmType.Tilt ? '倾斜异常' :
+               alarm.type === AlarmType.CoverOpen ? '井盖开启' : '设备告警',
+        device: alarm.manholeId,
+        deviceName: manhole?.name || alarm.manholeId,
+        status: alarm.isResolved ? '已解决' : (alarm.level === AlarmLevel.Alert || alarm.level === AlarmLevel.Emergency ? '严重' : '警告'),
+        type: alarm.isResolved ? 'success' : (alarm.level === AlarmLevel.Alert || alarm.level === AlarmLevel.Emergency ? 'error' : 'warning')
+      };
+    });
+    setEventLog(logs);
+  }, [alarms, manholes]);
   
   // 自动刷新逻辑 - 改为1小时刷新一次
   useEffect(() => {
