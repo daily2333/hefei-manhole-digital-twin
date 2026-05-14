@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id            String         @id @default(cuid())
+  username      String         @unique
+  passwordHash  String
+  displayName   String
+  email         String?        @unique
+  status        UserStatus     @default(ACTIVE)
+  roleId        String
+  role          Role           @relation(fields: [roleId], references: [id])
+  operationLogs OperationLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Manhole {
+  id                 String              @id
+  name               String
+  deviceId           String              @unique
+  status             ManholeStatus
+  longitude          Float
+  latitude           Float
+  address            String?
+  district           String?
+  street             String?
+  model              String?
+  manufacturer       String?
+  material           String?
+  installationDate   DateTime?
+  lastMaintenanceAt  DateTime?
+  nextMaintenanceAt  DateTime?
+  manager            String?
+  contactPhone       String?
+  healthScore        Float?
+  telemetryRecords   TelemetryRecord[]
+  alarms             Alarm[]
+  maintenanceRecords MaintenanceRecord[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model TelemetryRecord {
+  id              String   @id @default(cuid())
+  manholeId       String
+  recordedAt      DateTime @default(now())
+  waterLevel      Float
+  methane         Float
+  carbonMonoxide  Float
+  hydrogenSulfide Float
+  oxygen          Float
+  temperature     Float
+  humidity        Float
+  batteryLevel    Float
+  signalStrength  Float
+  coverStatus     CoverStatus
+  manhole         Manhole  @relation(fields: [manholeId], references: [id])
+
+  @@index([manholeId, recordedAt])
+}
+
+model Alarm {
+  id               String      @id @default(cuid())
+  manholeId        String
+  type             AlarmType
+  level            AlarmLevel
+  title            String
+  description      String?
+  actualValue      Float?
+  normalRange      String?
+  anomalyScore     Float?
+  isResolved       Boolean     @default(false)
+  confirmedAt      DateTime?
+  resolvedAt       DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  manhole          Manhole     @relation(fields: [manholeId], references: [id])
+}
+
+model MaintenanceRecord {
+  id           String              @id @default(cuid())
+  manholeId    String
+  type         MaintenanceType
+  description  String
+  operatorName String
+  contactPhone String?
+  status       MaintenanceStatus
+  scheduledAt  DateTime?
+  completedAt  DateTime?
+  manhole      Manhole             @relation(fields: [manholeId], references: [id])
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model OperationLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  targetType String
+  targetId   String?
+  detail     String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ManholeStatus {
+  NORMAL
+  WARNING
+  ALARM
+  MAINTENANCE
+  OFFLINE
+}
+
+enum CoverStatus {
+  OPEN
+  CLOSED
+}
+
+enum AlarmLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlarmType {
+  WATER_LEVEL
+  GAS
+  TILT
+  COVER
+  POWER
+  SIGNAL
+}
+
+enum MaintenanceType {
+  INSPECTION
+  CLEANING
+  REPAIR
+  REPLACEMENT
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
