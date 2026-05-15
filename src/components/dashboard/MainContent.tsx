@@ -23,7 +23,7 @@ import {
 import { ErrorBoundary } from '../layout/ErrorBoundary';
 import { useAuth } from '../../contexts/AuthContext';
 
-const DashboardTab = lazy(() => import('./DashboardTab'));
+const CyberDashboard = lazy(() => import('./CyberDashboard'));
 const ManholeSceneWrapper = lazy(() => import('../3d-visualization/ManholeSceneWrapper'));
 
 const UserManagement = lazy(() => import('../user-management/UserManagement'));
@@ -110,16 +110,12 @@ const MainContent: React.FC<MainContentProps> = ({
         label: <span><DashboardOutlined /> 综合仪表盘</span>,
         roles: ['admin', 'operator', 'viewer'],
         children: wrapLazyTab(
-          <DashboardTab
+          <CyberDashboard
             manholes={manholes}
             alarms={alarms}
-            selectedManhole={selectedManhole}
             realTimeDataMap={realTimeDataMap}
-            onSelectManhole={onSelectManhole}
             loading={loading}
-            healthScoreCard={healthScoreCard}
             onRefresh={onRefresh}
-            performanceScore={performanceScore}
           />
         )
       },
@@ -147,7 +143,7 @@ const MainContent: React.FC<MainContentProps> = ({
           </span>
         ),
         roles: ['admin', 'operator'],
-        children: wrapLazyTab(<AlarmManagement />)
+        children: wrapLazyTab(<AlarmManagement alarms={alarms} />)
       },
       {
         key: 'maintenance',
@@ -159,7 +155,7 @@ const MainContent: React.FC<MainContentProps> = ({
         key: 'devices',
         label: <span><AppstoreOutlined /> 设备管理</span>,
         roles: ['admin', 'operator'],
-        children: wrapLazyTab(<DeviceManagement />)
+        children: wrapLazyTab(<DeviceManagement manholes={manholes} realTimeDataMap={realTimeDataMap} />)
       },
       {
         key: 'analytics',

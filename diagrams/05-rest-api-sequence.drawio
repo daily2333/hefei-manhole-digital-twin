@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="REST API调用时序图">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 参与者：React前端 -->
+        <mxCell id="2" value="React前端" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="50" width="100" height="600" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：Axios客户端 -->
+        <mxCell id="3" value="Axios客户端" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="50" width="100" height="600" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：Express路由器 -->
+        <mxCell id="4" value="Express路由器" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="50" width="100" height="600" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：服务层 -->
+        <mxCell id="5" value="服务层" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="700" y="50" width="100" height="600" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：SQLite数据库 -->
+        <mxCell id="6" value="SQLite数据库" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="900" y="50" width="100" height="600" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息1：组件挂载 -->
+        <mxCell id="7" value="组件挂载" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="2" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="100" />
+              <mxPoint x="150" y="100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息2：触发useEffect -->
+        <mxCell id="8" value="触发useEffect" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="2" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="130" />
+              <mxPoint x="150" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息3：调用axios.get -->
+        <mxCell id="9" value="调用axios.get(url)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息4：发送HTTP请求 -->
+        <mxCell id="10" value="发送HTTP GET请求" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息5：执行中间件 -->
+        <mxCell id="11" value="执行中间件（认证、日志、CORS）" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="190" />
+              <mxPoint x="550" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息6：路由处理 -->
+        <mxCell id="12" value="路由处理函数" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息7：执行业务逻辑 -->
+        <mxCell id="13" value="执行业务逻辑" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="5" target="5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="240" />
+              <mxPoint x="750" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息8：数据库查询 -->
+        <mxCell id="14" value="执行SQL查询" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息9：返回查询结果 -->
+        <mxCell id="15" value="返回查询结果" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="6" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息10：返回数据 -->
+        <mxCell id="16" value="返回处理后的数据" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="5" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息11：返回HTTP响应 -->
+        <mxCell id="17" value="返回HTTP 200响应" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="4" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息12：返回响应数据 -->
+        <mxCell id="18" value="返回响应数据" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="3" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息13：更新组件状态 -->
+        <mxCell id="19" value="更新组件状态" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="2" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="380" />
+              <mxPoint x="150" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息14：触发重新渲染 -->
+        <mxCell id="20" value="触发重新渲染" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="2" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="410" />
+              <mxPoint x="150" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 错误处理路径 -->
+        <mxCell id="21" value="错误处理路径" style="swimlane;startSize=30;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="100" y="450" width="1000" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- 错误消息1：捕获异常 -->
+        <mxCell id="22" value="捕获异常" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#b85450;" edge="1" parent="21" source="5" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 错误消息2：返回错误响应 -->
+        <mxCell id="23" value="返回HTTP 4xx/5xx错误" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#b85450;" edge="1" parent="21" source="4" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 错误消息3：返回错误信息 -->
+        <mxCell id="24" value="返回错误信息" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#b85450;" edge="1" parent="21" source="3" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 错误消息4：显示错误提示 -->
+        <mxCell id="25" value="显示错误提示" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#b85450;" edge="1" parent="21" source="2" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="120" />
+              <mxPoint x="150" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

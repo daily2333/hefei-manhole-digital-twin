@@ -22,7 +22,7 @@ import {
 } from '@ant-design/icons';
 import { ManholeInfo, ManholeAlarm, ManholeRealTimeData } from '../../typings'; 
 import PredictionChart from '../dashboard/PredictionChart';
-import HefeiManholeScene from '../3d-visualization/HefeiManholeScene';
+import DigitalTwinScene from '../3d-visualization/DigitalTwinScene';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
@@ -83,7 +83,7 @@ const PredictionAnalytics: React.FC<PredictionAnalyticsProps> = ({
           icon={<BulbOutlined />}
           style={{ marginBottom: '16px' }}
         />
-        <HefeiManholeScene
+        <DigitalTwinScene
           manholes={manholes}
           realTimeDataMap={realTimeDataMap}
           onSelectManhole={setSelectedManholeId}

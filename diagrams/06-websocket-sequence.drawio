@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="WebSocket实时推送时序图">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 参与者：IoT设备 -->
+        <mxCell id="2" value="IoT设备" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="100" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：MQTT Broker -->
+        <mxCell id="3" value="MQTT Broker" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：MQTT客户端 -->
+        <mxCell id="4" value="MQTT客户端" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：SQLite -->
+        <mxCell id="5" value="SQLite数据库" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：Socket.IO服务器 -->
+        <mxCell id="6" value="Socket.IO服务器" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：useRealtimeSocket钩子 -->
+        <mxCell id="7" value="useRealtimeSocket钩子" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：React组件 -->
+        <mxCell id="8" value="React组件" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="50" width="100" height="700" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息1：设备发布传感器数据 -->
+        <mxCell id="9" value="发布传感器数据（JSON）" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息2：Broker路由消息 -->
+        <mxCell id="10" value="路由消息到订阅者" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息3：客户端接收消息 -->
+        <mxCell id="11" value="接收MQTT消息" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="180" />
+              <mxPoint x="550" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息4：解析JSON数据 -->
+        <mxCell id="12" value="解析JSON数据" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="210" />
+              <mxPoint x="550" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息5：保存到数据库 -->
+        <mxCell id="13" value="插入real_time_data表" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息6：返回插入结果 -->
+        <mxCell id="14" value="返回插入结果" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="5" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息7：检查阈值 -->
+        <mxCell id="15" value="检查是否超阈值" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="280" />
+              <mxPoint x="550" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息8：触发告警（条件） -->
+        <mxCell id="16" value="触发告警（如超阈值）" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息9：推送实时数据 -->
+        <mxCell id="17" value="推送实时数据更新" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="4" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息10：Socket.IO广播 -->
+        <mxCell id="18" value="广播realtime:global事件" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息11：钩子接收事件 -->
+        <mxCell id="19" value="接收Socket.IO事件" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="7" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="380" />
+              <mxPoint x="1150" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息12：更新全局缓存 -->
+        <mxCell id="20" value="更新全局数据缓存" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="7" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="410" />
+              <mxPoint x="1150" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息13：触发状态更新 -->
+        <mxCell id="21" value="触发React状态更新" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="7" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息14：组件重新渲染 -->
+        <mxCell id="22" value="组件重新渲染" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="8" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350" y="470" />
+              <mxPoint x="1350" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息15：显示最新数据 -->
+        <mxCell id="23" value="显示最新实时数据" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="8" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350" y="500" />
+              <mxPoint x="1350" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息16：订阅特定井盖数据 -->
+        <mxCell id="24" value="joinManhole(id)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="8" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350" y="550" />
+              <mxPoint x="1150" y="550" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息17：加入房间 -->
+        <mxCell id="25" value="加入Socket.IO房间" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="7" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="580" />
+              <mxPoint x="950" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息18：推送特定井盖数据 -->
+        <mxCell id="26" value="推送特定井盖数据" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="620" />
+              <mxPoint x="1150" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

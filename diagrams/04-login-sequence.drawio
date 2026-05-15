@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="用户登录认证时序图">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 参与者：用户 -->
+        <mxCell id="2" value="用户" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="50" width="100" height="500" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：登录页面 -->
+        <mxCell id="3" value="登录页面" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="50" width="100" height="500" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：认证上下文 -->
+        <mxCell id="4" value="认证上下文" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="50" width="100" height="500" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：用户服务 -->
+        <mxCell id="5" value="用户服务" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="700" y="50" width="100" height="500" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：Express服务器 -->
+        <mxCell id="6" value="Express服务器" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="50" width="100" height="500" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：SQLite数据库 -->
+        <mxCell id="7" value="SQLite数据库" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="50" width="100" height="500" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息1：用户输入凭据 -->
+        <mxCell id="8" value="输入用户名和密码" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息2：提交登录表单 -->
+        <mxCell id="9" value="提交登录表单" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息3：调用登录函数 -->
+        <mxCell id="10" value="调用login(username, password)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息4：发送POST请求 -->
+        <mxCell id="11" value="POST /api/users/login" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息5：查询用户信息 -->
+        <mxCell id="12" value="查询用户信息" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息6：返回用户数据 -->
+        <mxCell id="13" value="返回用户数据" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="7" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息7：验证密码 -->
+        <mxCell id="14" value="验证密码" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="6" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="250" />
+              <mxPoint x="950" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息8：生成JWT令牌 -->
+        <mxCell id="15" value="生成JWT令牌" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="6" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="280" />
+              <mxPoint x="950" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息9：返回JWT令牌 -->
+        <mxCell id="16" value="返回JWT令牌" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="6" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息10：返回登录结果 -->
+        <mxCell id="17" value="返回登录结果" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="5" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息11：存储到localStorage -->
+        <mxCell id="18" value="存储token和用户信息到localStorage" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="340" />
+              <mxPoint x="550" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息12：更新认证状态 -->
+        <mxCell id="19" value="更新认证状态" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="370" />
+              <mxPoint x="550" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息13：返回成功响应 -->
+        <mxCell id="20" value="返回成功响应" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="4" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息14：跳转到仪表盘 -->
+        <mxCell id="21" value="跳转到仪表盘" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="3" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

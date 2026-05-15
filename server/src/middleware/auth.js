@@ -1,9 +1,8 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error('[auth] FATAL: JWT_SECRET environment variable is required');
-  process.exit(1);
+const JWT_SECRET = process.env.JWT_SECRET || 'manhole-secret-key-2026';
+if (!process.env.JWT_SECRET) {
+  console.warn('[auth] WARNING: JWT_SECRET not set, using default (do not use in production)');
 }
 
 function authMiddleware(req, res, next) {

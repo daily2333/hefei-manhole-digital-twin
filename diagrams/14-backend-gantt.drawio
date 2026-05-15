@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="后端模块开发甘特图">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 标题 -->
+        <mxCell id="title" value="后端模块开发甘特图" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="300" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 时间轴头部 -->
+        <mxCell id="th0" value="任务" style="swimlane;startSize=30;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=13;align=center;" vertex="1" parent="1">
+          <mxGeometry x="0" y="60" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w1" value="第1周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="200" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w2" value="第2周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w3" value="第3周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w4" value="第4周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="500" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w5" value="第5周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="600" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w6" value="第6周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="w7" value="第7周" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=#ffffff;fontStyle=1;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="800" y="60" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 阶段1：基础设施 -->
+        <mxCell id="phase1" value="阶段1：基础设施搭建" style="swimlane;startSize=30;fillColor=#e8f5e9;strokeColor=#66bb6a;fontColor=#2e7d32;fontStyle=1;fontSize=12;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="0" y="130" width="900" height="120" as="geometry" />
+        </mxCell>
+        <!-- Express搭建 1周 -->
+        <mxCell id="t1_name" value="Express搭建" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#66bb6a;fontColor=#2e7d32;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase1">
+          <mxGeometry x="0" y="30" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t1_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4caf50;strokeColor=#2e7d32;arcSize=20;" vertex="1" parent="phase1">
+          <mxGeometry x="200" y="35" width="100" height="30" as="geometry" />
+        </mxCell>
+        <!-- SQLite建表 1周 -->
+        <mxCell id="t2_name" value="SQLite建表" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#66bb6a;fontColor=#2e7d32;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase1">
+          <mxGeometry x="0" y="70" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t2_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4caf50;strokeColor=#2e7d32;arcSize=20;" vertex="1" parent="phase1">
+          <mxGeometry x="200" y="75" width="100" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- 阶段2：API与通信 -->
+        <mxCell id="phase2" value="阶段2：API与通信开发" style="swimlane;startSize=30;fillColor=#e3f2fd;strokeColor=#42a5f5;fontColor=#1565c0;fontStyle=1;fontSize=12;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="0" y="270" width="900" height="200" as="geometry" />
+        </mxCell>
+        <!-- REST API路由 3周 -->
+        <mxCell id="t3_name" value="REST API路由" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#42a5f5;fontColor=#1565c0;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase2">
+          <mxGeometry x="0" y="30" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t3_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2196f3;strokeColor=#1565c0;arcSize=20;" vertex="1" parent="phase2">
+          <mxGeometry x="300" y="35" width="300" height="30" as="geometry" />
+        </mxCell>
+        <!-- Socket.IO集成 2周 -->
+        <mxCell id="t4_name" value="Socket.IO集成" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#42a5f5;fontColor=#1565c0;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase2">
+          <mxGeometry x="0" y="70" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t4_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2196f3;strokeColor=#1565c0;arcSize=20;" vertex="1" parent="phase2">
+          <mxGeometry x="500" y="75" width="200" height="30" as="geometry" />
+        </mxCell>
+        <!-- MQTT客户端 2周 -->
+        <mxCell id="t5_name" value="MQTT客户端" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#42a5f5;fontColor=#1565c0;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase2">
+          <mxGeometry x="0" y="110" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t5_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff9800;strokeColor=#e65100;arcSize=20;" vertex="1" parent="phase2">
+          <mxGeometry x="500" y="115" width="200" height="30" as="geometry" />
+        </mxCell>
+        <!-- JWT认证 1周 -->
+        <mxCell id="t6_name" value="JWT认证" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#42a5f5;fontColor=#1565c0;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase2">
+          <mxGeometry x="0" y="150" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t6_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2196f3;strokeColor=#1565c0;arcSize=20;" vertex="1" parent="phase2">
+          <mxGeometry x="700" y="155" width="100" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- 阶段3：数据准备 -->
+        <mxCell id="phase3" value="阶段3：数据准备" style="swimlane;startSize=30;fillColor=#fff3e0;strokeColor=#ffb74d;fontColor=#e65100;fontStyle=1;fontSize=12;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="0" y="490" width="900" height="80" as="geometry" />
+        </mxCell>
+        <!-- 种子数据 1周 -->
+        <mxCell id="t7_name" value="种子数据" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ffb74d;fontColor=#e65100;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="phase3">
+          <mxGeometry x="0" y="30" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="t7_bar" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9e9e9e;strokeColor=#616161;arcSize=20;" vertex="1" parent="phase3">
+          <mxGeometry x="800" y="35" width="100" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- 依赖关系箭头 -->
+        <!-- Express搭建 -> REST API -->
+        <mxCell id="dep1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e53935;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="t1_bar" target="t3_bar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- SQLite建表 -> REST API -->
+        <mxCell id="dep2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e53935;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="t2_bar" target="t3_bar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- REST API -> Socket.IO -->
+        <mxCell id="dep3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e53935;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="t3_bar" target="t4_bar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- REST API -> 种子数据 -->
+        <mxCell id="dep4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e53935;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="t3_bar" target="t7_bar">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="305" />
+              <mxPoint x="650" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 图例 -->
+        <mxCell id="legend_title" value="图例" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="0" y="600" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4caf50;strokeColor=#2e7d32;" vertex="1" parent="1">
+          <mxGeometry x="0" y="630" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1t" value="已完成" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="35" y="630" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2196f3;strokeColor=#1565c0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="630" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2t" value="进行中" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="135" y="630" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff9800;strokeColor=#e65100;" vertex="1" parent="1">
+          <mxGeometry x="200" y="630" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3t" value="重点任务" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="235" y="630" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9e9e9e;strokeColor=#616161;" vertex="1" parent="1">
+          <mxGeometry x="300" y="630" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4t" value="计划中" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="335" y="630" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e53935;strokeWidth=2;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" as="sourcePoint" />
+            <mxPoint x="30" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg5t" value="依赖关系" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="35" y="660" width="60" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

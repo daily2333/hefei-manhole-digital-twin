@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="技术栈架构">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 标题 -->
+        <mxCell id="title" value="智能井盖数字孪生系统 — 技术栈架构" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 前端技术 - 蓝色系 -->
+        <mxCell id="fe_group" value="前端技术" style="swimlane;startSize=35;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;arcSize=8;fontStyle=1;fontSize=16;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="380" height="700" as="geometry" />
+        </mxCell>
+
+        <!-- 核心框架 -->
+        <mxCell id="fe_sec1" value="核心框架" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="fe_group">
+          <mxGeometry x="20" y="50" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="fe1" value="React 18" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec1">
+          <mxGeometry x="15" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe2" value="TypeScript" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec1">
+          <mxGeometry x="180" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe3" value="Ant Design 5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec1">
+          <mxGeometry x="15" y="85" width="145" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fe4" value="React Router" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="fe_sec1">
+          <mxGeometry x="180" y="85" width="145" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 数据可视化 -->
+        <mxCell id="fe_sec2" value="数据可视化" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="fe_group">
+          <mxGeometry x="20" y="195" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="fe5" value="ECharts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec2">
+          <mxGeometry x="15" y="35" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe6" value="Ant Design&#xa;Charts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="fe_sec2">
+          <mxGeometry x="130" y="35" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe7" value="Three.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec2">
+          <mxGeometry x="245" y="35" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe8" value="@react-three/fiber" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec2">
+          <mxGeometry x="15" y="85" width="150" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fe9" value="@react-three/drei" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec2">
+          <mxGeometry x="180" y="85" width="145" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 地图与实时 -->
+        <mxCell id="fe_sec3" value="地图与实时通信" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="fe_group">
+          <mxGeometry x="20" y="340" width="340" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="fe10" value="高德地图&#xa;JS API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec3">
+          <mxGeometry x="15" y="35" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe11" value="Socket.IO&#xa;Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="fe_sec3">
+          <mxGeometry x="180" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe12" value="Axios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="fe_sec3">
+          <mxGeometry x="15" y="85" width="100" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="fe13" value="Day.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="fe_sec3">
+          <mxGeometry x="130" y="85" width="100" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- 前端工具链 -->
+        <mxCell id="fe_sec4" value="性能优化" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="fe_group">
+          <mxGeometry x="20" y="475" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="fe14" value="lazy + Suspense" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec4">
+          <mxGeometry x="15" y="35" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="fe15" value="useMemo / memo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec4">
+          <mxGeometry x="180" y="35" width="145" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="fe16" value="requestIdleCallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec4">
+          <mxGeometry x="15" y="70" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="fe17" value="分批更新 / 缓存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec4">
+          <mxGeometry x="180" y="70" width="145" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- 状态管理 -->
+        <mxCell id="fe_sec5" value="状态管理与上下文" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="fe_group">
+          <mxGeometry x="20" y="590" width="340" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fe18" value="AuthContext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec5">
+          <mxGeometry x="15" y="35" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="fe19" value="SettingsContext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="fe_sec5">
+          <mxGeometry x="180" y="35" width="145" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- 后端技术 - 橙色/紫色系 -->
+        <mxCell id="be_group" value="后端技术" style="swimlane;startSize=35;fillColor=#ffe6cc;strokeColor=#d79b00;rounded=1;arcSize=8;fontStyle=1;fontSize=16;html=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="80" width="380" height="700" as="geometry" />
+        </mxCell>
+
+        <!-- Web 框架 -->
+        <mxCell id="be_sec1" value="Web 框架" style="swimlane;startSize=25;fillColor=#ffe6cc;strokeColor=#d79b00;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="be_group">
+          <mxGeometry x="20" y="50" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="be1" value="Express 4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=13;" vertex="1" parent="be_sec1">
+          <mxGeometry x="15" y="35" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="be2" value="RESTful API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="be_sec1">
+          <mxGeometry x="180" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 数据库 -->
+        <mxCell id="be_sec2" value="数据库" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="be_group">
+          <mxGeometry x="20" y="165" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="be3" value="SQLite" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;size=10;" vertex="1" parent="be_sec2">
+          <mxGeometry x="15" y="30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="be4" value="better-sqlite3&#xa;高性能绑定" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="be_sec2">
+          <mxGeometry x="140" y="40" width="185" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 实时通信 -->
+        <mxCell id="be_sec3" value="实时通信" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="be_group">
+          <mxGeometry x="20" y="280" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="be5" value="Socket.IO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" vertex="1" parent="be_sec3">
+          <mxGeometry x="15" y="35" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="be6" value="WebSocket&#xa;实时推送" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="be_sec3">
+          <mxGeometry x="180" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- IoT 接入 -->
+        <mxCell id="be_sec4" value="IoT 接入" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="be_group">
+          <mxGeometry x="20" y="395" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="be7" value="MQTT&#xa;客户端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" vertex="1" parent="be_sec4">
+          <mxGeometry x="15" y="35" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="be8" value="MQTT Broker&#xa;数据订阅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="be_sec4">
+          <mxGeometry x="180" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 安全认证 -->
+        <mxCell id="be_sec5" value="安全认证" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="be_group">
+          <mxGeometry x="20" y="510" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="be9" value="JWT&#xa;用户认证" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;" vertex="1" parent="be_sec5">
+          <mxGeometry x="15" y="35" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="be10" value="Bearer Token&#xa;鉴权中间件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="be_sec5">
+          <mxGeometry x="180" y="35" width="145" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 路由模块 -->
+        <mxCell id="be_sec6" value="路由模块" style="swimlane;startSize=25;fillColor=#ffe6cc;strokeColor=#d79b00;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="be_group">
+          <mxGeometry x="20" y="625" width="340" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="be11" value="manholes / alarms / maintenance / users / stats" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="be_sec6">
+          <mxGeometry x="15" y="30" width="310" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- 开发工具 - 灰色系 -->
+        <mxCell id="tool_group" value="开发工具" style="swimlane;startSize=35;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;arcSize=8;fontStyle=1;fontSize=16;html=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="80" width="280" height="700" as="geometry" />
+        </mxCell>
+
+        <!-- 包管理 -->
+        <mxCell id="tool_sec1" value="包管理与构建" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="tool_group">
+          <mxGeometry x="20" y="50" width="240" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="t1" value="npm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;" vertex="1" parent="tool_sec1">
+          <mxGeometry x="15" y="35" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t2" value="Create React&#xa;App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="tool_sec1">
+          <mxGeometry x="125" y="35" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t3" value="TypeScript&#xa;Compiler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="tool_sec1">
+          <mxGeometry x="15" y="78" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t4" value="ESLint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="tool_sec1">
+          <mxGeometry x="125" y="78" width="100" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 版本控制 -->
+        <mxCell id="tool_sec2" value="版本控制" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="tool_group">
+          <mxGeometry x="20" y="185" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="t5" value="Git" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;" vertex="1" parent="tool_sec2">
+          <mxGeometry x="15" y="35" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t6" value="GitHub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="tool_sec2">
+          <mxGeometry x="125" y="35" width="100" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 运行环境 -->
+        <mxCell id="tool_sec3" value="运行环境" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="tool_group">
+          <mxGeometry x="20" y="280" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="t7" value="Node.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;" vertex="1" parent="tool_sec3">
+          <mxGeometry x="15" y="35" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="t8" value="浏览器" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="tool_sec3">
+          <mxGeometry x="125" y="35" width="100" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 群组间关系箭头 -->
+        <mxCell id="rel_fe_be" value="HTTP / WebSocket" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontColor=#d79b00;fontStyle=1;" edge="1" parent="1" source="fe_group" target="be_group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_be_tool" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#999999;" edge="1" parent="1" source="be_group" target="tool_group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

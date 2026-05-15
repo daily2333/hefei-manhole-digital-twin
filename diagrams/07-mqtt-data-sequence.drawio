@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="MQTT数据采集时序图">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 参与者：IoT传感器（多个） -->
+        <mxCell id="2" value="IoT传感器&#xa;（多个）" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="100" y="50" width="100" height="800" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：MQTT Broker -->
+        <mxCell id="3" value="MQTT Broker" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="350" y="50" width="100" height="800" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：MQTT客户端 -->
+        <mxCell id="4" value="MQTT客户端" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="600" y="50" width="100" height="800" as="geometry" />
+        </mxCell>
+        
+        <!-- 参与者：数据库 -->
+        <mxCell id="5" value="SQLite数据库" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="850" y="50" width="100" height="800" as="geometry" />
+        </mxCell>
+        
+        <!-- 阶段1：数据发布 -->
+        <mxCell id="6" value="数据发布阶段" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="950" height="200" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息1：传感器1发布数据 -->
+        <mxCell id="7" value="发布JSON数据（温度、湿度、水位）" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="6" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息2：传感器2发布数据 -->
+        <mxCell id="8" value="发布JSON数据（气体浓度、电池电量）" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="6" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息3：传感器3发布数据 -->
+        <mxCell id="9" value="发布JSON数据（井盖状态、倾斜角度）" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="6" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 阶段2：消息路由 -->
+        <mxCell id="10" value="消息路由阶段" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="50" y="320" width="950" height="150" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息4：Broker路由消息 -->
+        <mxCell id="11" value="根据主题路由消息" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="10" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 阶段3：数据处理 -->
+        <mxCell id="12" value="数据处理阶段" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="50" y="490" width="950" height="250" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息5：客户端接收消息 -->
+        <mxCell id="13" value="接收MQTT消息" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="12" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="50" />
+              <mxPoint x="650" y="50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息6：解析JSON数据 -->
+        <mxCell id="14" value="解析JSON数据" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="12" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="80" />
+              <mxPoint x="650" y="80" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息7：数据验证 -->
+        <mxCell id="15" value="数据格式验证" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="12" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="110" />
+              <mxPoint x="650" y="110" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息8：插入数据库 -->
+        <mxCell id="16" value="插入real_time_data表" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="12" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息9：返回插入结果 -->
+        <mxCell id="17" value="返回插入结果" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="12" source="5" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 阶段4：告警触发 -->
+        <mxCell id="18" value="告警触发阶段" style="swimlane;startSize=30;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="50" y="760" width="950" height="120" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息10：检查阈值 -->
+        <mxCell id="19" value="检查数据是否超阈值" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="18" source="4" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="50" />
+              <mxPoint x="650" y="50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- 消息11：触发告警 -->
+        <mxCell id="20" value="插入告警记录到alarms表" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#b85450;" edge="1" parent="18" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 消息12：返回告警ID -->
+        <mxCell id="21" value="返回告警ID" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#999999;" edge="1" parent="18" source="5" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 数据格式说明 -->
+        <mxCell id="22" value="数据格式示例：&#xa;{&#xa;  &quot;temperature&quot;: 25.5,&#xa;  &quot;humidity&quot;: 60,&#xa;  &quot;water_level&quot;: 12.3,&#xa;  &quot;ch4&quot;: 0.5,&#xa;  &quot;battery_level&quot;: 85,&#xa;  &quot;cover_status&quot;: &quot;closed&quot;&#xa;}" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="100" width="200" height="180" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

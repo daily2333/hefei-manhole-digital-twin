@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="总体架构">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 标题 -->
+        <mxCell id="title" value="智能井盖数字孪生系统总体架构" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="400" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 客户端层 - 蓝色 -->
+        <mxCell id="layer1" value="客户端层" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;arcSize=8;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="840" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" value="React 18" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="30" y="45" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="TypeScript" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="200" y="45" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Ant Design 5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="370" y="45" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="ECharts&#xa;Three.js&#xa;高德地图" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="layer1">
+          <mxGeometry x="540" y="45" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="Socket.IO Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="layer1">
+          <mxGeometry x="710" y="45" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 接口层 - 橙色 -->
+        <mxCell id="layer2" value="接口层" style="swimlane;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;rounded=1;arcSize=8;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="840" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" value="Express 4&#xa;REST API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;" vertex="1" parent="layer2">
+          <mxGeometry x="80" y="45" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="Socket.IO&#xa;WebSocket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;" vertex="1" parent="layer2">
+          <mxGeometry x="340" y="45" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="JSON&#xa;数据格式" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="layer2">
+          <mxGeometry x="600" y="45" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 服务层 - 紫色 -->
+        <mxCell id="layer3" value="服务层" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;arcSize=8;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="400" width="840" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" value="业务逻辑处理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="layer3">
+          <mxGeometry x="30" y="45" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" value="MQTT 客户端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="layer3">
+          <mxGeometry x="220" y="45" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="JWT 认证" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="layer3">
+          <mxGeometry x="410" y="45" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" value="数据验证与&#xa;错误处理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="layer3">
+          <mxGeometry x="600" y="45" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 数据层 - 绿色 -->
+        <mxCell id="layer4" value="数据层" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;arcSize=8;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="560" width="840" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" value="SQLite&#xa;(better-sqlite3)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;size=12;" vertex="1" parent="layer4">
+          <mxGeometry x="100" y="40" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" value="井盖资产表&#xa;manholes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="layer4">
+          <mxGeometry x="300" y="50" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" value="实时数据表&#xa;real_time_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="layer4">
+          <mxGeometry x="460" y="50" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" value="告警/维护表&#xa;alarms / maintenance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="layer4">
+          <mxGeometry x="620" y="50" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 设备层 - 灰色 -->
+        <mxCell id="layer5" value="设备层" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;arcSize=8;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="720" width="840" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="MQTT Broker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="layer5">
+          <mxGeometry x="120" y="45" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="IoT 传感器设备" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;dashed=1;" vertex="1" parent="layer5">
+          <mxGeometry x="380" y="45" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="水位 / 气体 /&#xa;温湿度 / 倾斜" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;dashed=1;" vertex="1" parent="layer5">
+          <mxGeometry x="620" y="45" width="150" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 层间连接 -->
+        <mxCell id="e_l1_l2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="layer1" target="layer2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_l2_l3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="layer2" target="layer3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_l3_l4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="layer3" target="layer4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_l4_l5" value="MQTT 协议" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontColor=#9673a6;fontStyle=1;" edge="1" parent="1" source="layer4" target="layer5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 右侧图例 -->
+        <mxCell id="legend" value="图例" style="swimlane;startSize=25;fillColor=none;strokeColor=#999999;rounded=1;fontStyle=1;fontSize=12;html=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="80" width="180" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="客户端层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="15" y="35" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="接口层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="15" y="70" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="服务层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="15" y="105" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="数据层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="15" y="140" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="设备层" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="15" y="175" width="150" height="28" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

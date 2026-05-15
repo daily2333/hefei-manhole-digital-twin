@@ -69,13 +69,18 @@ enum BatchOperation {
   Calibrate = '批量校准'
 }
 
+interface DeviceManagementProps {
+  manholes?: ManholeInfo[];
+  realTimeDataMap?: Map<string, ManholeRealTimeData>;
+}
+
 /**
  * 设备管理组件
  */
-const DeviceManagement: React.FC = () => {
+const DeviceManagement: React.FC<DeviceManagementProps> = ({ manholes: propManholes, realTimeDataMap: propRealTimeDataMap }) => {
   // 状态定义
-  const [devices, setDevices] = useState<ManholeInfo[]>([]);
-  const [realTimeDataMap, setRealTimeDataMap] = useState<Map<string, ManholeRealTimeData>>(new Map());
+  const [devices, setDevices] = useState<ManholeInfo[]>(propManholes || []);
+  const [realTimeDataMap, setRealTimeDataMap] = useState<Map<string, ManholeRealTimeData>>(propRealTimeDataMap || new Map());
 
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -91,6 +96,15 @@ const DeviceManagement: React.FC = () => {
   
   // 加载API数据
   useEffect(() => {
+    // 如果有props数据，使用props数据
+    if (propManholes && propManholes.length > 0) {
+      setDevices(propManholes);
+      if (propRealTimeDataMap) {
+        setRealTimeDataMap(propRealTimeDataMap);
+      }
+      return;
+    }
+
     setLoading(true);
 
     const loadDevices = async () => {
@@ -115,10 +129,11 @@ const DeviceManagement: React.FC = () => {
     };
 
     loadDevices();
-  }, []);
+  }, [propManholes, propRealTimeDataMap]);
   
-  // 定期从API更新实时数据
+  // 定期从API更新实时数据 - 只在没有props数据时启用
   useEffect(() => {
+    if (propManholes && propManholes.length > 0) return;
     if (devices.length === 0) return;
     
     const intervalId = setInterval(() => {
@@ -135,10 +150,10 @@ const DeviceManagement: React.FC = () => {
       }).catch(error => {
         console.error('更新实时数据失败:', error);
       });
-    }, 30000);
+    }, 60000); // 改为1分钟
     
     return () => clearInterval(intervalId);
-  }, [devices]);
+  }, [devices, propManholes]);
   
   // 过滤设备列表
   const filteredDevices = useMemo(() => devices.filter(device => {

@@ -17,12 +17,16 @@ import ReactECharts from 'echarts-for-react';
 
 
 
+interface AlarmManagementProps {
+  alarms?: ManholeAlarm[];
+}
+
 /**
  * 告警管理主页面组件
  */
-const AlarmManagement: React.FC = () => {
+const AlarmManagement: React.FC<AlarmManagementProps> = ({ alarms: propAlarms }) => {
   // 告警数据
-  const [alarms, setAlarms] = useState<ManholeAlarm[]>([]);
+  const [alarms, setAlarms] = useState<ManholeAlarm[]>(propAlarms || []);
   // 标签页
   const [activeTab, setActiveTab] = useState('1');
   // 加载状态
@@ -43,12 +47,17 @@ const AlarmManagement: React.FC = () => {
     }
   }, []);
   
-  // 初始加载数据
+  // 初始加载数据 - 只在没有props数据时获取
   useEffect(() => {
+    if (propAlarms && propAlarms.length > 0) {
+      setAlarms(propAlarms);
+      return;
+    }
+    
     fetchAlarmData();
     const intervalId = setInterval(fetchAlarmData, 300000);
     return () => clearInterval(intervalId);
-  }, [fetchAlarmData]);
+  }, [fetchAlarmData, propAlarms]);
   
   // 处理告警确认
   const handleAcknowledge = useCallback(async (alarmId: string) => {

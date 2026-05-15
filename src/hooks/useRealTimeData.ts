@@ -15,6 +15,7 @@ type IdleWindow = Window & {
 
 const globalDataCache = new Map<string, CacheEntry>();
 let cacheCleanupTimer: ReturnType<typeof setInterval> | null = null;
+let cacheRefCount = 0;
 
 const scheduleIdleTask = (callback: () => void) => {
   const idleWindow = window as IdleWindow;
@@ -37,8 +38,19 @@ const cleanupCache = () => {
 };
 
 const ensureCacheCleanupTimer = () => {
-  if (typeof window === 'undefined' || cacheCleanupTimer) return;
+  if (typeof window === 'undefined') return;
+  cacheRefCount++;
+  if (cacheCleanupTimer) return;
   cacheCleanupTimer = setInterval(cleanupCache, CACHE_CLEANUP_INTERVAL);
+};
+
+const releaseCacheCleanupTimer = () => {
+  cacheRefCount--;
+  if (cacheRefCount <= 0 && cacheCleanupTimer) {
+    clearInterval(cacheCleanupTimer);
+    cacheCleanupTimer = null;
+    cacheRefCount = 0;
+  }
 };
 
 const isSignificantChange = (oldData: ManholeRealTimeData, newData: ManholeRealTimeData, threshold: number): boolean => {
@@ -77,7 +89,10 @@ export const useRealTimeData = (manholeId: string, interval = DEFAULT_INTERVAL):
   useEffect(() => {
     ensureCacheCleanupTimer();
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      releaseCacheCleanupTimer();
+    };
   }, []);
 
   useEffect(() => {
@@ -124,7 +139,10 @@ export const useMultiRealTimeData = (manholeIds: string[], interval = DEFAULT_IN
   useEffect(() => {
     ensureCacheCleanupTimer();
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      releaseCacheCleanupTimer();
+    };
   }, []);
 
   const stableIds = useMemo(() => [...manholeIds].sort(), [manholeIds.join(',')]);
