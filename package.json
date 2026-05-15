@@ -34,15 +34,16 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "set NODE_OPTIONS=--max-old-space-size=4096 && set GENERATE_SOURCEMAP=false && set FAST_REFRESH=false && react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "set NODE_OPTIONS=--max-old-space-size=4096 && set FAST_REFRESH=false && craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "server": "cd server && npm run dev",
     "server:seed": "cd server && npm run seed",
     "dev": "concurrently --names \"FE,BE\" --prefix-colors \"cyan,green\" \"npm start\" \"npm run server\""
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "concurrently": "^9.1.2"
   },
   "eslintConfig": {
